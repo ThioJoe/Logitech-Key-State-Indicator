@@ -38,8 +38,8 @@ namespace G915X_KeyState_Indicator
         [DllImport("kernel32.dll")]
         private static extern IntPtr GetModuleHandle(string lpModuleName);
 
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        private static extern short GetAsyncKeyState(int keyCode);
+        [DllImport("user32.dll")]
+        private static extern short GetKeyState(int keyCode);
 
         private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
         private LowLevelKeyboardProc _proc;
@@ -100,9 +100,9 @@ namespace G915X_KeyState_Indicator
                 uint vkCode = kbd.vkCode;
                 LowLevelKeyboardHookFlags flags = kbd.flags;
 
+                // Checks if the numlock key was the one pressed, and only care about key up event
                 if (vkCode == VK_NUMLOCK && flags.HasFlag(LowLevelKeyboardHookFlags.KeyUp))
                 {
-                    // Add short delay as a test
                     this.BeginInvoke(new Action(UpdateNumLockStatus));
                 }
             }
@@ -111,14 +111,13 @@ namespace G915X_KeyState_Indicator
 
         private void UpdateNumLockStatus()
         {
-            bool isNumLockOn = IsNumLockOnUsingAsyncState();
+            bool isNumLockOn = IsNumLockOn();
 
             // Update UI
             _statusLabel.Text = $"NumLock is currently: {(isNumLockOn ? "ON" : "OFF")}";
             _statusLabel.ForeColor = isNumLockOn ? Color.Green : Color.Red;
 
-            // Here you could add your Logitech G915 specific code
-            // for updating the keyboard LEDs based on NumLock state
+            // To Do: Update logitech key status light
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
@@ -130,10 +129,9 @@ namespace G915X_KeyState_Indicator
             base.OnFormClosing(e);
         }
 
-        private static bool IsNumLockOnUsingAsyncState()
+        private static bool IsNumLockOn()
         {
-            // Using GetAsyncKeyState - more reliable for real-time state
-            return (GetAsyncKeyState((int)Keys.NumLock) & 0x0001) == 0x0001;
+            return (GetKeyState(VK_NUMLOCK) & 1) == 1;
         }
 
         // Returned as pointer in the lparam of the hook callback
