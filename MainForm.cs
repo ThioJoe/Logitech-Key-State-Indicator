@@ -13,6 +13,8 @@ using static LedCSharp.LogitechGSDK;
 
 namespace G915X_KeyState_Indicator
 {
+    using DWORD = System.UInt32;        // 4 Bytes, aka uint, uint32
+
     public partial class MainForm : Form
     {
         // Keyboard hook constants
@@ -20,6 +22,8 @@ namespace G915X_KeyState_Indicator
         private const int WM_KEYDOWN = 0x0100;
         private const int WM_KEYUP = 0x0101;
         private const int VK_NUMLOCK = 0x90;
+        private const int VM_SYSKEYDOWN = 0x104;
+        private const int VM_SYSKEYUP = 0x105;
 
         // Win32 API imports
         [DllImport("user32.dll")]
@@ -33,6 +37,9 @@ namespace G915X_KeyState_Indicator
 
         [DllImport("kernel32.dll")]
         private static extern IntPtr GetModuleHandle(string lpModuleName);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        private static extern short GetAsyncKeyState(int keyCode);
 
         private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
         private LowLevelKeyboardProc _proc;
@@ -88,34 +95,15 @@ namespace G915X_KeyState_Indicator
         {
             if (nCode >= 0)
             {
-                int vkCode = Marshal.ReadInt32(lParam);
-                if (vkCode == VK_NUMLOCK)
+                // Get the data from the struct as an object
+                KBDLLHOOKSTRUCT kbd = (KBDLLHOOKSTRUCT)Marshal.PtrToStructure(lParam, typeof(KBDLLHOOKSTRUCT));
+                uint vkCode = kbd.vkCode;
+                LowLevelKeyboardHookFlags flags = kbd.flags;
+
+                if (vkCode == VK_NUMLOCK && flags.HasFlag(LowLevelKeyboardHookFlags.KeyUp))
                 {
-                    // The NumLock key was just pressed/released
-                    // Wait a tiny bit for the state to settle
-                    Task.Delay(50).ContinueWith(t =>
-                    {
-                        bool currentState = Control.IsKeyLocked(Keys.NumLock);
-                        if (currentState != _previousNumLockState)
-                        {
-                            _previousNumLockState = currentState;
-                            // Invoke on UI thread since we're in a callback
-                            this.BeginInvoke(new Action(() =>
-                            {
-                                UpdateNumLockStatus();
-                                // Double-check the state after a short delay
-                                Task.Delay(100).ContinueWith(t2 =>
-                                {
-                                    bool verifyState = Control.IsKeyLocked(Keys.NumLock);
-                                    if (verifyState != currentState)
-                                    {
-                                        _previousNumLockState = verifyState;
-                                        this.BeginInvoke(new Action(UpdateNumLockStatus));
-                                    }
-                                }, TaskScheduler.Default);
-                            }));
-                        }
-                    }, TaskScheduler.Default);
+                    // Add short delay as a test
+                    this.BeginInvoke(new Action(UpdateNumLockStatus));
                 }
             }
             return CallNextHookEx(_hookID, nCode, wParam, lParam);
@@ -123,7 +111,7 @@ namespace G915X_KeyState_Indicator
 
         private void UpdateNumLockStatus()
         {
-            bool isNumLockOn = Control.IsKeyLocked(Keys.NumLock);
+            bool isNumLockOn = IsNumLockOnUsingAsyncState();
 
             // Update UI
             _statusLabel.Text = $"NumLock is currently: {(isNumLockOn ? "ON" : "OFF")}";
@@ -140,6 +128,34 @@ namespace G915X_KeyState_Indicator
                 UnhookWindowsHookEx(_hookID);
             }
             base.OnFormClosing(e);
+        }
+
+        private static bool IsNumLockOnUsingAsyncState()
+        {
+            // Using GetAsyncKeyState - more reliable for real-time state
+            return (GetAsyncKeyState((int)Keys.NumLock) & 0x0001) == 0x0001;
+        }
+
+        // Returned as pointer in the lparam of the hook callback
+        // See: https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-kbdllhookstruct
+        private struct KBDLLHOOKSTRUCT
+        {
+            public DWORD vkCode;          // Virtual key code
+            public DWORD scanCode;        
+            public LowLevelKeyboardHookFlags flags;
+            public DWORD time;
+            public IntPtr dwExtraInfo;
+        }
+
+        [Flags]
+        public enum LowLevelKeyboardHookFlags : uint
+        {
+            Extended = 0x01,              // Bit 0: Extended key (e.g. function key or numpad)
+            LowerILInjected = 0x02,      // Bit 1: Injected from lower integrity level process
+            Injected = 0x10,             // Bit 4: Injected from any process
+            AltDown = 0x20,              // Bit 5: ALT key pressed
+            KeyUp = 0x80                 // Bit 7: Key being released (transition state)
+            // Bits 2-3, 6 are reserved
         }
     }
 }
