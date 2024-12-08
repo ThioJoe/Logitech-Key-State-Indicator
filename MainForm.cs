@@ -10,6 +10,10 @@ using System.Windows.Forms;
 using System.Runtime.InteropServices;
 // Import from Include/LogitechGSDK.cs which uses namespace LedCSharp
 using static LedCSharp.LogitechGSDK;
+using LedCSharp;
+using System.Reflection;
+using System.Globalization;
+using System.Security.Cryptography;
 
 namespace G915X_KeyState_Indicator
 {
@@ -22,8 +26,15 @@ namespace G915X_KeyState_Indicator
         private const int WM_KEYDOWN = 0x0100;
         private const int WM_KEYUP = 0x0101;
         private const int VK_NUMLOCK = 0x90;
+        private const int VK_CAPSLOCK = 0x14;
         private const int VM_SYSKEYDOWN = 0x104;
         private const int VM_SYSKEYUP = 0x105;
+
+        List<int> keysToMonitor = new List<int> { 
+            VK_NUMLOCK, 
+            VK_CAPSLOCK 
+        };
+
 
         // Win32 API imports
         [DllImport("user32.dll")]
@@ -49,8 +60,22 @@ namespace G915X_KeyState_Indicator
         private bool _previousNumLockState;
         private Label _statusLabel;
 
+        // Track current desired colors
+        private int defaultRed = 0;
+        private int defaultGreen = 0;
+        private int defaultBlue = 255;
+
+        private int activatedRed = 255;
+        private int activatedGreen = 0;
+        private int activatedBlue = 0;
+
         public MainForm()
         {
+            // Add exe current directory to PATH
+            string path = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
+
+            LogitechGSDK.LogiLedInit(); // If this gives an error about module not found, try using x86 instead of x64. The x64 dll might be broken.
+            
             InitializeComponent();
             SetupUI();
 
@@ -58,9 +83,10 @@ namespace G915X_KeyState_Indicator
             _proc = HookCallback;
             _hookID = SetHook(_proc);
 
-            // Initialize state
-            _previousNumLockState = Control.IsKeyLocked(Keys.NumLock);
-            UpdateNumLockStatus();
+            foreach (int key in keysToMonitor)
+            {
+                UpdateNumLockStatus(key);
+            }
         }
 
         private void SetupUI()
@@ -97,27 +123,27 @@ namespace G915X_KeyState_Indicator
             {
                 // Get the data from the struct as an object
                 KBDLLHOOKSTRUCT kbd = (KBDLLHOOKSTRUCT)Marshal.PtrToStructure(lParam, typeof(KBDLLHOOKSTRUCT));
-                uint vkCode = kbd.vkCode;
+                int vkCode = (int)kbd.vkCode;
                 LowLevelKeyboardHookFlags flags = kbd.flags;
 
                 // Checks if the numlock key was the one pressed, and only care about key up event
-                if (vkCode == VK_NUMLOCK && flags.HasFlag(LowLevelKeyboardHookFlags.KeyUp))
+                if (keysToMonitor.Contains((int)vkCode) && flags.HasFlag(LowLevelKeyboardHookFlags.KeyUp))
                 {
-                    this.BeginInvoke(new Action(UpdateNumLockStatus));
+                    this.BeginInvoke(new Action(() => UpdateNumLockStatus(vkCode)));
                 }
             }
             return CallNextHookEx(_hookID, nCode, wParam, lParam);
         }
 
-        private void UpdateNumLockStatus()
+        private void UpdateNumLockStatus(int vkCode)
         {
-            bool isNumLockOn = IsNumLockOn();
+            bool isKeyOn = IsKeyStateOn((int)vkCode);
 
             // Update UI
-            _statusLabel.Text = $"NumLock is currently: {(isNumLockOn ? "ON" : "OFF")}";
-            _statusLabel.ForeColor = isNumLockOn ? Color.Green : Color.Red;
+            _statusLabel.Text = $"Key is currently: {(isKeyOn ? "ON" : "OFF")}";
+            _statusLabel.ForeColor = isKeyOn ? Color.Green : Color.Red;
 
-            // To Do: Update logitech key status light
+            UpdateLogitechKeyLight(isKeyOn, vkCode);
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
@@ -126,12 +152,55 @@ namespace G915X_KeyState_Indicator
             {
                 UnhookWindowsHookEx(_hookID);
             }
+            LogitechGSDK.LogiLedShutdown();
             base.OnFormClosing(e);
         }
 
-        private static bool IsNumLockOn()
+        private static bool IsKeyStateOn(int keyEnum)
         {
-            return (GetKeyState(VK_NUMLOCK) & 1) == 1;
+            return (GetKeyState(keyEnum) & 1) == 1;
+        }
+
+        private void UpdateLogitechKeyLight(bool isOn, int vkCode)
+        {
+            // Set target device to per-key RGB keyboards
+            LogitechGSDK.LogiLedSetTargetDevice(LogitechGSDK.LOGI_DEVICETYPE_PERKEY_RGB);
+
+            // First set the base lighting for all keys (e.g., white)
+            LogitechGSDK.LogiLedSetLighting(redPercentage: defaultRed, greenPercentage: defaultGreen, bluePercentage: defaultBlue); // This sets all keys to white
+
+            keyboardNames keyToUpdate;
+            if (vkCode == VK_NUMLOCK)
+            {
+                keyToUpdate = keyboardNames.NUM_LOCK;
+            }
+            else if (vkCode == VK_CAPSLOCK)
+            {
+                keyToUpdate = keyboardNames.CAPS_LOCK;
+            }
+            else
+            {
+                return;
+            }
+
+            // Then set the specific color for NUM_LOCK
+            if (isOn)
+            {
+                LogitechGSDK.LogiLedSetLightingForKeyWithKeyName (
+                    keyCode: keyToUpdate,
+                    redPercentage: defaultRed,
+                    greenPercentage: defaultGreen,
+                    bluePercentage: defaultBlue
+                   );
+            }
+            else
+            {
+                LogitechGSDK.LogiLedSetLightingForKeyWithKeyName(
+                    keyCode: keyToUpdate,
+                    redPercentage: activatedRed,
+                    greenPercentage: activatedGreen,
+                    bluePercentage: activatedBlue);
+            }
         }
 
         // Returned as pointer in the lparam of the hook callback
