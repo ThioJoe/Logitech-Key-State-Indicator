@@ -100,7 +100,7 @@ namespace G915X_KeyState_Indicator
         }
 
         // Example usage:
-        private void LoadColors()
+        private void LoadConfig()
         {
             // Check if the config file exists
             if (!File.Exists(ConfigFileName))
@@ -139,6 +139,8 @@ namespace G915X_KeyState_Indicator
                 capsLock_Off_Color = ReadColorFromConfig(sectionName, "capsLock_Off_Color", default_Color);
                 scrollLock_Off_Color = ReadColorFromConfig(sectionName, "scrollLock_Off_Color", default_Color);
                 numLock_Off_Color = ReadColorFromConfig(sectionName, "numLock_Off_Color", default_Color);
+
+                DEBUGMODE = ReadConfigIni(sectionName, "debugMode").Trim().ToLower() == "true";
             }
             catch (Exception ex)
             {
@@ -179,7 +181,9 @@ numLock_On_Color=255,0,0
 capsLock_Off_Color=default
 scrollLock_Off_Color=default
 numLock_Off_Color=default
-            
+
+debugMode=false
+
 """;
 
             File.WriteAllText(ConfigFileName, defaultTemplateString);

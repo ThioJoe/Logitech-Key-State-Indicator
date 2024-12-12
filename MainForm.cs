@@ -82,18 +82,29 @@ namespace G915X_KeyState_Indicator
         private static readonly RGBTuple _scrollLock_Off_Color = (R: 255, G: 0, B: 0);
         private static readonly RGBTuple _numLock_Off_Color = (R: 0, G: 0, B: 255);
 
+        // Debugging variables
+        private static bool DEBUGMODE = false;
+        private static int debugCounter = 0;
+
         public MainForm()
         {
             // Add exe current directory to PATH
             string path = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
 
-            // Read the config file and load the colors
-            LoadColors();
+            #if DEBUG
+            DEBUGMODE = true;
+            #endif
 
+            // Read the config file and load the colors
+            LoadConfig();
             LogitechGSDK.LogiLedInit(); // If this gives an error about module not found, try using x86 instead of x64. The x64 dll might be broken.
-            
             InitializeComponent();
             SetupUI();
+
+            if (DEBUGMODE)
+            {
+                labelDebug.Visible = true;
+            }
 
             // First set the base lighting for all keys
             LogitechGSDK.LogiLedSetLighting(redPercentage: default_Color.R, greenPercentage: default_Color.G, bluePercentage: default_Color.B);
@@ -137,9 +148,16 @@ namespace G915X_KeyState_Indicator
                 int vkCode = (int)kbd.vkCode;
                 LowLevelKeyboardHookFlags flags = kbd.flags;
 
-                // Checks if the numlock key was the one pressed, and only care about key up event
+                // Checks if a monitored key was the one pressed, and only care about key up event
+                // While the key is held down, the event is triggered repeatedly, but only once when released, so we can go based just on key up
                 if (keysToMonitor.Contains((int)vkCode) && flags.HasFlag(LowLevelKeyboardHookFlags.KeyUp))
                 {
+                    if (DEBUGMODE)
+                    {
+                        debugCounter++;
+                        labelDebug.Text = $"Key: {vkCode}, Flags: {flags}\nCount: {debugCounter}";
+                    }
+
                     this.BeginInvoke(new Action(() => UpdateKeyStatus(vkCode)));
                 }
             }
