@@ -102,9 +102,9 @@ namespace G915X_KeyState_Indicator
             SetupUI();
 
             if (DEBUGMODE)
-            {
                 labelDebug.Visible = true;
-            }
+            else
+                labelDebug.Visible = false;
 
             // First set the base lighting for all keys
             LogitechGSDK.LogiLedSetLighting(redPercentage: default_Color.R, greenPercentage: default_Color.G, bluePercentage: default_Color.B);

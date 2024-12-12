@@ -99,65 +99,77 @@ namespace G915X_KeyState_Indicator
             return value;
         }
 
-        // Example usage:
         private void LoadConfig()
         {
-            // Check if the config file exists
             if (!File.Exists(ConfigFileName))
             {
-                // Create a template config file
                 WriteTemplateConfig();
-
-                // Display a message saying that a template config file was created, and use default colors
                 MessageBox.Show($"Config file not found. A template config file has been created called {ConfigFileName}. " +
                     $"\n\nIn the mean time default color will be used. You can customize the colors in the config then restart the app to use them.",
                     "Config File Not Found", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                // Use default readonly versions
-                default_Color = _default_Color;
-                capsLock_On_Color = _capsLock_On_Color;
-                scrollLock_On_Color = _scrollLock_On_Color;
-                numLock_On_Color = _numLock_On_Color;
-                capsLock_Off_Color = _capsLock_Off_Color;
-                scrollLock_Off_Color = _scrollLock_Off_Color;
-                numLock_Off_Color = _numLock_Off_Color;
+                UseDefaults();
                 return;
             }
 
-            // If the file was found
+            const string sectionName = "settings";
+            List<string> errors = new List<string>();
+
+            // Simple helper function
+            RGBTuple LoadColor(string settingName, RGBTuple defaultValue)
+            {
+                try
+                {
+                    return ReadColorFromConfig(sectionName, settingName, defaultValue);
+                }
+                catch (Exception ex)
+                {
+                    errors.Add($"Failed to load {settingName}: {ex.Message}");
+                    return defaultValue;
+                }
+            }
+
+            // Load all color, specifying the default value for each to use if there's an error
+            default_Color = LoadColor("default_Color", _default_Color);
+            capsLock_On_Color = LoadColor("capsLock_On_Color", _capsLock_On_Color);
+            scrollLock_On_Color = LoadColor("scrollLock_On_Color", _scrollLock_On_Color);
+            numLock_On_Color = LoadColor("numLock_On_Color", _numLock_On_Color);
+            capsLock_Off_Color = LoadColor("capsLock_Off_Color", _capsLock_Off_Color);
+            scrollLock_Off_Color = LoadColor("scrollLock_Off_Color", _scrollLock_Off_Color);
+            numLock_Off_Color = LoadColor("numLock_Off_Color", _numLock_Off_Color);
+
+            // Load debug mode
             try
             {
-                string sectionName = "settings";
-                // Read default color first as it's needed for other colors
-                default_Color = ReadColorFromConfig(sectionName, "default_Color", (R: 0, G: 0, B: 255));
-
-                // Read all the On colors
-                capsLock_On_Color = ReadColorFromConfig(sectionName, "capsLock_On_Color", default_Color);
-                scrollLock_On_Color = ReadColorFromConfig(sectionName, "scrollLock_On_Color", default_Color);
-                numLock_On_Color = ReadColorFromConfig(sectionName, "numLock_On_Color", default_Color);
-
-                // Read all the Off colors
-                capsLock_Off_Color = ReadColorFromConfig(sectionName, "capsLock_Off_Color", default_Color);
-                scrollLock_Off_Color = ReadColorFromConfig(sectionName, "scrollLock_Off_Color", default_Color);
-                numLock_Off_Color = ReadColorFromConfig(sectionName, "numLock_Off_Color", default_Color);
-
                 DEBUGMODE = ReadConfigIni(sectionName, "debugMode").Trim().ToLower() == "true";
             }
             catch (Exception ex)
             {
-                // Display an error and use default colors
-                MessageBox.Show($"Error loading colors: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-
-                // Use default readonly versions
-                default_Color = _default_Color;
-                capsLock_On_Color = _capsLock_On_Color;
-                scrollLock_On_Color = _scrollLock_On_Color;
-                numLock_On_Color = _numLock_On_Color;
-                capsLock_Off_Color = _capsLock_Off_Color;
-                scrollLock_Off_Color = _scrollLock_Off_Color;
-                numLock_Off_Color = _numLock_Off_Color;
-
-                return;
+                errors.Add($"Failed to load debugMode setting: {ex.Message}");
+                DEBUGMODE = false;
             }
+
+            // Show errors if any occurred
+            if (errors.Count > 0)
+            {
+                MessageBox.Show(
+                    $"Some settings failed to load (default values will be used for these settings):\n\n{string.Join("\n", errors)}" +
+                    $"\n\nNote: If it says \"config file not found\" it probably means that individual setting wasn't found, not the entire file.\n(It's a Windows API thing)",
+                    "Configuration Warnings",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+            }
+        }
+
+        private void UseDefaults()
+        {
+            default_Color = _default_Color;
+            capsLock_On_Color = _capsLock_On_Color;
+            scrollLock_On_Color = _scrollLock_On_Color;
+            numLock_On_Color = _numLock_On_Color;
+            capsLock_Off_Color = _capsLock_Off_Color;
+            scrollLock_Off_Color = _scrollLock_Off_Color;
+            numLock_Off_Color = _numLock_Off_Color;
+            DEBUGMODE = false;
         }
 
         private void WriteTemplateConfig()

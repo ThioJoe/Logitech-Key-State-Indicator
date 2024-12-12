@@ -60,7 +60,7 @@
             // 
             this.labelCapsLock.AutoSize = true;
             this.labelCapsLock.Font = new System.Drawing.Font("Microsoft Sans Serif", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.labelCapsLock.Location = new System.Drawing.Point(48, 208);
+            this.labelCapsLock.Location = new System.Drawing.Point(48, 192);
             this.labelCapsLock.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.labelCapsLock.Name = "labelCapsLock";
             this.labelCapsLock.Size = new System.Drawing.Size(235, 32);
@@ -71,7 +71,7 @@
             // 
             this.labelDebug.AutoSize = true;
             this.labelDebug.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.labelDebug.Location = new System.Drawing.Point(54, 356);
+            this.labelDebug.Location = new System.Drawing.Point(49, 310);
             this.labelDebug.Name = "labelDebug";
             this.labelDebug.Size = new System.Drawing.Size(151, 29);
             this.labelDebug.TabIndex = 3;
@@ -89,7 +89,7 @@
             this.Controls.Add(this.labelNumLock);
             this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Name = "MainForm";
-            this.Text = "Form1";
+            this.Text = "Logitech Key Status Monitor - Statuses";
             this.ResumeLayout(false);
             this.PerformLayout();
 
