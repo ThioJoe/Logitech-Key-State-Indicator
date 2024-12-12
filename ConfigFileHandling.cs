@@ -176,7 +176,7 @@ namespace G915X_KeyState_Indicator
         {
             string defaultTemplateString = """
 # Set the colors. They must be in comma separated format of 3 numbers from 0 to 255 (R,G,B)
-    # For example, a pure green key at max brightness would be    whateverSetting=0,255,0
+    # For example, a pure green key at max brightness would be:    whateverSetting=0,255,0
 # Or, you can use the special keyword "default" to make it equal to the default color
     # For example  whateverSetting=default
 
@@ -189,7 +189,7 @@ capsLock_On_Color=255,0,0
 scrollLock_On_Color=255,0,0
 numLock_On_Color=255,0,0
 
-    # The color of each key while its status is OFF. Can be either 
+    # The color of each key while its status is OFF.
 capsLock_Off_Color=default
 scrollLock_Off_Color=default
 numLock_Off_Color=default
