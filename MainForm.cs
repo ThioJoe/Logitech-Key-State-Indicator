@@ -18,6 +18,7 @@ using System.Security.Cryptography;
 namespace G915X_KeyState_Indicator
 {
     using DWORD = System.UInt32;        // 4 Bytes, aka uint, uint32
+    using RGBTuple = (int R, int G, int B);
 
     public partial class MainForm : Form
     {
@@ -30,6 +31,8 @@ namespace G915X_KeyState_Indicator
         private const int VK_SCROLL = 0x91;
         private const int VM_SYSKEYDOWN = 0x104;
         private const int VM_SYSKEYUP = 0x105;
+
+        private const string ConfigFileName = "Logi_KeyMonitor_Config.ini";
 
         List<int> keysToMonitor = new List<int> { 
             VK_NUMLOCK, 
@@ -58,17 +61,16 @@ namespace G915X_KeyState_Indicator
         private LowLevelKeyboardProc _proc;
         private IntPtr _hookID = IntPtr.Zero;
 
-        // Track previous state
-        private Label _statusLabel;
+        // Set up colors for each key
+        private RGBTuple default_Color = (R:0, G:0, B:255);
 
-        // Track current desired colors
-        private int defaultRed = 0;
-        private int defaultGreen = 0;
-        private int defaultBlue = 255;
+        private RGBTuple capsLock_On_Color = (R: 255, G: 0, B: 0);
+        private RGBTuple scrollLock_On_Color = (R: 0, G: 0, B: 255);
+        private RGBTuple numLock_On_Color = (R: 255, G: 0, B: 0);
 
-        private int activatedRed = 255;
-        private int activatedGreen = 0;
-        private int activatedBlue = 0;
+        private RGBTuple capsLock_Off_Color = (R: 0, G: 0, B: 255);
+        private RGBTuple scrollLock_Off_Color = (R: 255, G: 0, B: 0);
+        private RGBTuple numLock_Off_Color = (R: 0, G: 0, B: 255);
 
         public MainForm()
         {
@@ -93,19 +95,8 @@ namespace G915X_KeyState_Indicator
         private void SetupUI()
         {
             this.Text = "Logitech Key State Monitor";
-            //this.Size = new Size(300, 150);
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
-
-            //_statusLabel = new Label
-            //{
-            //    AutoSize = true,
-            //    Location = new Point(12, 20),
-            //    Font = new Font("Segoe UI", 12F),
-            //    Text = "Initializing..."
-            //};
-
-            //this.Controls.Add(_statusLabel);
         }
 
         private IntPtr SetHook(LowLevelKeyboardProc proc)
@@ -187,20 +178,30 @@ namespace G915X_KeyState_Indicator
             LogitechGSDK.LogiLedSetTargetDevice(LogitechGSDK.LOGI_DEVICETYPE_PERKEY_RGB);
 
             // First set the base lighting for all keys (e.g., white)
-            LogitechGSDK.LogiLedSetLighting(redPercentage: defaultRed, greenPercentage: defaultGreen, bluePercentage: defaultBlue); // This sets all keys to white
+            LogitechGSDK.LogiLedSetLighting(redPercentage: default_Color.R, greenPercentage: default_Color.G, bluePercentage: default_Color.B); // This sets all keys to white
+
+            // Set key colors for each
+            RGBTuple onColor;
+            RGBTuple offColor;
 
             keyboardNames keyToUpdate;
             if (vkCode == VK_NUMLOCK)
             {
                 keyToUpdate = keyboardNames.NUM_LOCK;
+                onColor = numLock_On_Color;
+                offColor = numLock_Off_Color;
             }
             else if (vkCode == VK_CAPSLOCK)
             {
                 keyToUpdate = keyboardNames.CAPS_LOCK;
+                onColor = capsLock_On_Color;
+                offColor = capsLock_Off_Color;
             }
             else if (vkCode == VK_SCROLL)
             {
                 keyToUpdate = keyboardNames.SCROLL_LOCK;
+                onColor = scrollLock_On_Color;
+                offColor = scrollLock_Off_Color;
             }
             else
             {
@@ -212,18 +213,19 @@ namespace G915X_KeyState_Indicator
             {
                 LogitechGSDK.LogiLedSetLightingForKeyWithKeyName (
                     keyCode: keyToUpdate,
-                    redPercentage: defaultRed,
-                    greenPercentage: defaultGreen,
-                    bluePercentage: defaultBlue
-                   );
+                    redPercentage: onColor.R,
+                    greenPercentage: onColor.G,
+                    bluePercentage: onColor.B
+                );
             }
             else
             {
                 LogitechGSDK.LogiLedSetLightingForKeyWithKeyName(
                     keyCode: keyToUpdate,
-                    redPercentage: activatedRed,
-                    greenPercentage: activatedGreen,
-                    bluePercentage: activatedBlue);
+                    redPercentage: offColor.R,
+                    greenPercentage: offColor.G,
+                    bluePercentage: offColor.B
+                );
             }
         }
 
@@ -248,5 +250,8 @@ namespace G915X_KeyState_Indicator
             KeyUp = 0x80                 // Bit 7: Key being released (transition state)
             // Bits 2-3, 6 are reserved
         }
-    }
-}
+
+
+    } // End of MainForm
+
+} // End of namespace
