@@ -28,13 +28,65 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
+            this.labelNumLock = new System.Windows.Forms.Label();
+            this.labelScrollLock = new System.Windows.Forms.Label();
+            this.labelCapsLock = new System.Windows.Forms.Label();
+            this.SuspendLayout();
+            // 
+            // labelNumLock
+            // 
+            this.labelNumLock.AutoSize = true;
+            this.labelNumLock.Font = new System.Drawing.Font("Microsoft Sans Serif", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelNumLock.Location = new System.Drawing.Point(48, 50);
+            this.labelNumLock.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.labelNumLock.Name = "labelNumLock";
+            this.labelNumLock.Size = new System.Drawing.Size(228, 32);
+            this.labelNumLock.TabIndex = 0;
+            this.labelNumLock.Text = "Num Lock Status";
+            // 
+            // labelScrollLock
+            // 
+            this.labelScrollLock.AutoSize = true;
+            this.labelScrollLock.Font = new System.Drawing.Font("Microsoft Sans Serif", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelScrollLock.Location = new System.Drawing.Point(48, 122);
+            this.labelScrollLock.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.labelScrollLock.Name = "labelScrollLock";
+            this.labelScrollLock.Size = new System.Drawing.Size(241, 32);
+            this.labelScrollLock.TabIndex = 1;
+            this.labelScrollLock.Text = "Scroll Lock Status";
+            // 
+            // labelCapsLock
+            // 
+            this.labelCapsLock.AutoSize = true;
+            this.labelCapsLock.Font = new System.Drawing.Font("Microsoft Sans Serif", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelCapsLock.Location = new System.Drawing.Point(48, 208);
+            this.labelCapsLock.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.labelCapsLock.Name = "labelCapsLock";
+            this.labelCapsLock.Size = new System.Drawing.Size(235, 32);
+            this.labelCapsLock.TabIndex = 2;
+            this.labelCapsLock.Text = "Caps Lock Status";
+            // 
+            // MainForm
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.ClientSize = new System.Drawing.Size(835, 454);
+            this.Controls.Add(this.labelCapsLock);
+            this.Controls.Add(this.labelScrollLock);
+            this.Controls.Add(this.labelNumLock);
+            this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.Name = "MainForm";
             this.Text = "Form1";
+            this.ResumeLayout(false);
+            this.PerformLayout();
+
         }
 
         #endregion
+
+        private System.Windows.Forms.Label labelNumLock;
+        private System.Windows.Forms.Label labelScrollLock;
+        private System.Windows.Forms.Label labelCapsLock;
     }
 }
 

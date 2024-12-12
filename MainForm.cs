@@ -27,12 +27,14 @@ namespace G915X_KeyState_Indicator
         private const int WM_KEYUP = 0x0101;
         private const int VK_NUMLOCK = 0x90;
         private const int VK_CAPSLOCK = 0x14;
+        private const int VK_SCROLL = 0x91;
         private const int VM_SYSKEYDOWN = 0x104;
         private const int VM_SYSKEYUP = 0x105;
 
         List<int> keysToMonitor = new List<int> { 
             VK_NUMLOCK, 
-            VK_CAPSLOCK 
+            VK_CAPSLOCK,
+            VK_SCROLL
         };
 
 
@@ -57,7 +59,6 @@ namespace G915X_KeyState_Indicator
         private IntPtr _hookID = IntPtr.Zero;
 
         // Track previous state
-        private bool _previousNumLockState;
         private Label _statusLabel;
 
         // Track current desired colors
@@ -85,26 +86,26 @@ namespace G915X_KeyState_Indicator
 
             foreach (int key in keysToMonitor)
             {
-                UpdateNumLockStatus(key);
+                UpdateKeyStatus(key);
             }
         }
 
         private void SetupUI()
         {
-            this.Text = "G915X Key State Monitor";
-            this.Size = new Size(300, 150);
+            this.Text = "Logitech Key State Monitor";
+            //this.Size = new Size(300, 150);
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
 
-            _statusLabel = new Label
-            {
-                AutoSize = true,
-                Location = new Point(12, 20),
-                Font = new Font("Segoe UI", 12F),
-                Text = "Initializing..."
-            };
+            //_statusLabel = new Label
+            //{
+            //    AutoSize = true,
+            //    Location = new Point(12, 20),
+            //    Font = new Font("Segoe UI", 12F),
+            //    Text = "Initializing..."
+            //};
 
-            this.Controls.Add(_statusLabel);
+            //this.Controls.Add(_statusLabel);
         }
 
         private IntPtr SetHook(LowLevelKeyboardProc proc)
@@ -112,8 +113,8 @@ namespace G915X_KeyState_Indicator
             using (var curProcess = System.Diagnostics.Process.GetCurrentProcess())
             using (var curModule = curProcess.MainModule)
             {
-                return SetWindowsHookEx(WH_KEYBOARD_LL, proc,
-                    GetModuleHandle(curModule.ModuleName), 0);
+                return SetWindowsHookEx(WH_KEYBOARD_LL, proc, GetModuleHandle(curModule.ModuleName), 0);
+
             }
         }
 
@@ -129,19 +130,38 @@ namespace G915X_KeyState_Indicator
                 // Checks if the numlock key was the one pressed, and only care about key up event
                 if (keysToMonitor.Contains((int)vkCode) && flags.HasFlag(LowLevelKeyboardHookFlags.KeyUp))
                 {
-                    this.BeginInvoke(new Action(() => UpdateNumLockStatus(vkCode)));
+                    this.BeginInvoke(new Action(() => UpdateKeyStatus(vkCode)));
                 }
             }
             return CallNextHookEx(_hookID, nCode, wParam, lParam);
         }
 
-        private void UpdateNumLockStatus(int vkCode)
+        private void UpdateKeyStatus(int vkCode)
         {
+            // Local function to update the label for whichever key changed
+            void UpdateLabel(Label label, bool isOn, string keyName)
+            {
+                label.Text = $"{keyName} is currently: {(isOn ? "ON" : "OFF")}";
+                label.ForeColor = isOn ? Color.Green : Color.Red;
+            }
+
             bool isKeyOn = IsKeyStateOn((int)vkCode);
 
-            // Update UI
-            _statusLabel.Text = $"Key is currently: {(isKeyOn ? "ON" : "OFF")}";
-            _statusLabel.ForeColor = isKeyOn ? Color.Green : Color.Red;
+            // Switch case for each key
+            switch (vkCode)
+            {
+                case VK_NUMLOCK:
+                    UpdateLabel(labelNumLock, isKeyOn, "Num Lock");
+                    break;
+                case VK_CAPSLOCK:
+                    UpdateLabel(labelCapsLock, isKeyOn, "Caps Lock");
+                    break;
+                case VK_SCROLL:
+                    UpdateLabel(labelScrollLock, isKeyOn, "Scroll Lock");
+                    break;
+                default:
+                    break;
+            }
 
             UpdateLogitechKeyLight(isKeyOn, vkCode);
         }
@@ -177,6 +197,10 @@ namespace G915X_KeyState_Indicator
             else if (vkCode == VK_CAPSLOCK)
             {
                 keyToUpdate = keyboardNames.CAPS_LOCK;
+            }
+            else if (vkCode == VK_SCROLL)
+            {
+                keyToUpdate = keyboardNames.SCROLL_LOCK;
             }
             else
             {
