@@ -62,25 +62,28 @@ namespace G915X_KeyState_Indicator
         private LowLevelKeyboardProc _proc;
         private IntPtr _hookID = IntPtr.Zero;
 
-        // Set up colors for each key
-        private RGBTuple default_Color = (R:0, G:0, B:255);
-
-        private RGBTuple capsLock_On_Color = (R: 255, G: 0, B: 0);
-        private RGBTuple scrollLock_On_Color = (R: 0, G: 0, B: 255);
-        private RGBTuple numLock_On_Color = (R: 255, G: 0, B: 0);
-
-        private RGBTuple capsLock_Off_Color = (R: 0, G: 0, B: 255);
+        // Set up colors for each key. These will properties will be updated from the config file
+        private RGBTuple default_Color =        (R:0, G:0, B:255);
+        // On
+        private RGBTuple capsLock_On_Color =    (R: 255, G: 0, B: 0);
+        private RGBTuple scrollLock_On_Color =  (R: 0, G: 0, B: 255);
+        private RGBTuple numLock_On_Color =     (R: 255, G: 0, B: 0);
+        // Off
+        private RGBTuple capsLock_Off_Color =   (R: 0, G: 0, B: 255);
         private RGBTuple scrollLock_Off_Color = (R: 255, G: 0, B: 0);
-        private RGBTuple numLock_Off_Color = (R: 0, G: 0, B: 255);
+        private RGBTuple numLock_Off_Color =    (R: 0, G: 0, B: 255);
 
-        // Readonly default versions
-        private static readonly RGBTuple _default_Color = (R: 0, G: 0, B: 255);
-        private static readonly RGBTuple _capsLock_On_Color = (R: 255, G: 0, B: 0);
-        private static readonly RGBTuple _scrollLock_On_Color = (R: 0, G: 0, B: 255);
-        private static readonly RGBTuple _numLock_On_Color = (R: 255, G: 0, B: 0);
-        private static readonly RGBTuple _capsLock_Off_Color = (R: 0, G: 0, B: 255);
-        private static readonly RGBTuple _scrollLock_Off_Color = (R: 255, G: 0, B: 0);
-        private static readonly RGBTuple _numLock_Off_Color = (R: 0, G: 0, B: 255);
+
+        // Readonly default versions - Will be used if the config file is not found or a value is missing
+        private static readonly RGBTuple _default_Color =           (R: 0, G: 0, B: 255);
+        // On
+        private static readonly RGBTuple _capsLock_On_Color =       (R: 255, G: 0, B: 0);
+        private static readonly RGBTuple _scrollLock_On_Color =     (R: 255, G: 0, B: 0);
+        private static readonly RGBTuple _numLock_On_Color =        (R: 255, G: 0, B: 0);
+        // Off
+        private static readonly RGBTuple _capsLock_Off_Color =      (R: 0, G: 0, B: 255);
+        private static readonly RGBTuple _scrollLock_Off_Color =    (R: 0, G: 0, B: 255);
+        private static readonly RGBTuple _numLock_Off_Color =       (R: 0, G: 0, B: 255);
 
         // Debugging variables
         private static bool DEBUGMODE = false;
@@ -107,7 +110,11 @@ namespace G915X_KeyState_Indicator
                 labelDebug.Visible = false;
 
             // First set the base lighting for all keys
+            // Set target device to per-key RGB keyboards
+            LogitechGSDK.LogiLedSetTargetDevice(LogitechGSDK.LOGI_DEVICETYPE_PERKEY_RGB);
+
             LogitechGSDK.LogiLedSetLighting(redPercentage: default_Color.R, greenPercentage: default_Color.G, bluePercentage: default_Color.B);
+            UpdateColorLabel(labelColorDefault, default_Color);
 
             // Set up keyboard hook
             _proc = HookCallback;
@@ -164,13 +171,20 @@ namespace G915X_KeyState_Indicator
             return CallNextHookEx(_hookID, nCode, wParam, lParam);
         }
 
+        private void UpdateColorLabel(Label label, RGBTuple color)
+        {
+            //label.Text = "◼";
+            System.Drawing.Color colorObj = System.Drawing.Color.FromArgb(255, color.R, color.G, color.B);
+            label.ForeColor = colorObj;
+        }
+
         private void UpdateKeyStatus(int vkCode)
         {
             // Local function to update the label for whichever key changed
             void UpdateLabel(Label label, bool isOn, string keyName)
             {
                 label.Text = $"{keyName} is currently: {(isOn ? "ON" : "OFF")}";
-                label.ForeColor = isOn ? Color.Green : Color.Red;
+                //label.ForeColor = isOn ? Color.Green : Color.Red;
             }
 
             bool isKeyOn = IsKeyStateOn((int)vkCode);
@@ -211,14 +225,12 @@ namespace G915X_KeyState_Indicator
 
         private void UpdateLogitechKeyLight(bool isOn, int vkCode)
         {
-            // Set target device to per-key RGB keyboards
-            LogitechGSDK.LogiLedSetTargetDevice(LogitechGSDK.LOGI_DEVICETYPE_PERKEY_RGB);
-
             
 
             // Set key colors for each
             RGBTuple onColor;
             RGBTuple offColor;
+            Label GUILabelForKey;
 
             keyboardNames keyToUpdate;
             if (vkCode == VK_NUMLOCK)
@@ -226,18 +238,21 @@ namespace G915X_KeyState_Indicator
                 keyToUpdate = keyboardNames.NUM_LOCK;
                 onColor = numLock_On_Color;
                 offColor = numLock_Off_Color;
+                GUILabelForKey = labelColorNumLock;
             }
             else if (vkCode == VK_CAPSLOCK)
             {
                 keyToUpdate = keyboardNames.CAPS_LOCK;
                 onColor = capsLock_On_Color;
                 offColor = capsLock_Off_Color;
+                GUILabelForKey = labelColorCapsLock;
             }
             else if (vkCode == VK_SCROLL)
             {
                 keyToUpdate = keyboardNames.SCROLL_LOCK;
                 onColor = scrollLock_On_Color;
                 offColor = scrollLock_Off_Color;
+                GUILabelForKey = labelColorScrollLock;
             }
             else
             {
@@ -253,6 +268,7 @@ namespace G915X_KeyState_Indicator
                     greenPercentage: onColor.G,
                     bluePercentage: onColor.B
                 );
+                UpdateColorLabel(GUILabelForKey, onColor);
             }
             else
             {
@@ -262,6 +278,7 @@ namespace G915X_KeyState_Indicator
                     greenPercentage: offColor.G,
                     bluePercentage: offColor.B
                 );
+                UpdateColorLabel(GUILabelForKey, offColor);
             }
         }
 
@@ -287,7 +304,31 @@ namespace G915X_KeyState_Indicator
             // Bits 2-3, 6 are reserved
         }
 
+        private void buttonOpenConfigFile_Click(object sender, EventArgs e)
+        {
+            // Set working directory to the exe directory
+            string exeDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
+            // Ensure the file exists. It should be on first startup but maybe the user deleted it
+            if (!File.Exists(ConfigFileName))
+            {
+                MessageBox.Show($"Config file not found. A template config file has been created called {ConfigFileName}. " +
+                    $"\n\nIn the mean time default color will be used. You can customize the colors in the config then restart the app to use them.",
+                    "Config File Not Found", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                WriteTemplateConfig();
+                return;
+            }
+            // Open the config file in the default text editor
+            System.Diagnostics.Process.Start(ConfigFileName);
+
+        }
+
+        private void buttonOpenDirectory_Click(object sender, EventArgs e)
+        {
+            // Open the directory of the current exe
+            string exeDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            System.Diagnostics.Process.Start(exeDir);
+        }
     } // End of MainForm
 
 } // End of namespace

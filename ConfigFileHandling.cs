@@ -197,10 +197,23 @@ numLock_Off_Color=default
 debugMode=false
 
 """;
-
-            File.WriteAllText(ConfigFileName, defaultTemplateString);
+            try
+            {
+                File.WriteAllText(ConfigFileName, defaultTemplateString);
+            }
+            catch (Exception ex)
+            {
+                // If there was a permission error, put it on the desktop and tell the user to move it manually
+                if (ex is UnauthorizedAccessException || ex is IOException)
+                {
+                    string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                    string desktopConfigPath = Path.Combine(desktopPath, Path.GetFileName(ConfigFileName));
+                    File.WriteAllText(desktopConfigPath, defaultTemplateString);
+                    MessageBox.Show($"Failed to write template config file to the program directory. It has been placed on your desktop as {Path.GetFileName(ConfigFileName)}. " +
+                        $"Please move it to the program directory to use it.", "Error Writing Config File", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+            }
         }
-
-
     }
 }
