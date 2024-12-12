@@ -47,9 +47,11 @@ namespace G915X_KeyState_Indicator
 
         private void RestoreFromTray(object sender, EventArgs e)
         {
+            this.Show(); // Do this before setting window state otherwise it might not be visible
             this.WindowState = FormWindowState.Normal;
-            //this.ShowInTaskbar = true;
-            this.Show();
+            this.Activate(); // Bring to foreground
+
+            //this.ShowInTaskbar = true; // Not necessary since we never hide it
         }
 
         private void ShowAbout(object sender, EventArgs e)

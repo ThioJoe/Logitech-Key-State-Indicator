@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.labelNumLock = new System.Windows.Forms.Label();
             this.labelScrollLock = new System.Windows.Forms.Label();
@@ -42,6 +43,7 @@
             this.buttonOpenDirectory = new System.Windows.Forms.Button();
             this.labelLogitechStatus = new System.Windows.Forms.Label();
             this.labelClosesToTray = new System.Windows.Forms.Label();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.SuspendLayout();
             // 
             // labelNumLock
@@ -97,6 +99,7 @@
             this.labelColorNumLock.Size = new System.Drawing.Size(48, 46);
             this.labelColorNumLock.TabIndex = 4;
             this.labelColorNumLock.Text = "◼";
+            this.toolTip1.SetToolTip(this.labelColorNumLock, "Shows the current color set for the key");
             // 
             // labelColorScrollLock
             // 
@@ -107,6 +110,7 @@
             this.labelColorScrollLock.Size = new System.Drawing.Size(48, 46);
             this.labelColorScrollLock.TabIndex = 5;
             this.labelColorScrollLock.Text = "◼";
+            this.toolTip1.SetToolTip(this.labelColorScrollLock, "Shows the current color set for the key");
             // 
             // labelColorCapsLock
             // 
@@ -117,6 +121,7 @@
             this.labelColorCapsLock.Size = new System.Drawing.Size(48, 46);
             this.labelColorCapsLock.TabIndex = 6;
             this.labelColorCapsLock.Text = "◼";
+            this.toolTip1.SetToolTip(this.labelColorCapsLock, "Shows the current color set for the key");
             // 
             // labelColorDefault
             // 
@@ -127,6 +132,7 @@
             this.labelColorDefault.Size = new System.Drawing.Size(48, 46);
             this.labelColorDefault.TabIndex = 7;
             this.labelColorDefault.Text = "◼";
+            this.toolTip1.SetToolTip(this.labelColorDefault, "Shows the current default key color");
             // 
             // labelDefault
             // 
@@ -226,6 +232,7 @@
         private System.Windows.Forms.Button buttonOpenDirectory;
         private System.Windows.Forms.Label labelLogitechStatus;
         private System.Windows.Forms.Label labelClosesToTray;
+        private System.Windows.Forms.ToolTip toolTip1;
     }
 }
 

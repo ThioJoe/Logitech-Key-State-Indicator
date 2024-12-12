@@ -45,6 +45,13 @@ namespace G915X_KeyState_Indicator
             VK_SCROLL
         };
 
+        Dictionary<int, string> keyNames = new Dictionary<int, string>
+        {
+            { VK_NUMLOCK, "Num Lock" },
+            { VK_CAPSLOCK, "Caps Lock" },
+            { VK_SCROLL, "Scroll Lock" },
+        };
+
 
         // Win32 API imports
         [DllImport("user32.dll")]
@@ -120,7 +127,7 @@ namespace G915X_KeyState_Indicator
             LogitechGSDK.LogiLedSetTargetDevice(LogitechGSDK.LOGI_DEVICETYPE_PERKEY_RGB);
 
             LogitechGSDK.LogiLedSetLighting(redPercentage: default_Color.R, greenPercentage: default_Color.G, bluePercentage: default_Color.B);
-            UpdateColorLabel(labelColorDefault, default_Color);
+            UpdateColorLabel(labelColorDefault, default_Color, "Default");
 
             // Set up keyboard hook
             _proc = HookCallback;
@@ -239,11 +246,25 @@ namespace G915X_KeyState_Indicator
             }
         }
 
-        private void UpdateColorLabel(Label label, RGBTuple color)
+        private void ShowHelp()
+        {
+            MessageBox.Show("" +
+                "",
+
+
+                "Help", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+        }
+
+
+        private void UpdateColorLabel(Label label, RGBTuple color, string keyName)
         {
             //label.Text = "◼";
             System.Drawing.Color colorObj = System.Drawing.Color.FromArgb(255, color.R, color.G, color.B);
             label.ForeColor = colorObj;
+            // Get the tooltip of the label and display the RGB values
+            string tooltipText = $"Currently Displayed {keyName} Color:\nR:  {color.R}\nG:  {color.G}\nB:  {color.B}";
+            toolTip1.SetToolTip(label, tooltipText);
         }
 
         private void UpdateKeyStatus(int vkCode)
@@ -261,13 +282,13 @@ namespace G915X_KeyState_Indicator
             switch (vkCode)
             {
                 case VK_NUMLOCK:
-                    UpdateLabel(labelNumLock, isKeyOn, "Num Lock");
+                    UpdateLabel(labelNumLock, isKeyOn, keyNames[VK_NUMLOCK]);
                     break;
                 case VK_CAPSLOCK:
-                    UpdateLabel(labelCapsLock, isKeyOn, "Caps Lock");
+                    UpdateLabel(labelCapsLock, isKeyOn, keyNames[VK_CAPSLOCK]);
                     break;
                 case VK_SCROLL:
-                    UpdateLabel(labelScrollLock, isKeyOn, "Scroll Lock");
+                    UpdateLabel(labelScrollLock, isKeyOn, keyNames[VK_SCROLL]);
                     break;
                 default:
                     break;
@@ -310,21 +331,21 @@ namespace G915X_KeyState_Indicator
             keyboardNames keyToUpdate;
             if (vkCode == VK_NUMLOCK)
             {
-                keyToUpdate = keyboardNames.NUM_LOCK;
+                keyToUpdate = keyboardNames.NUM_LOCK; // Enum from Logitech SDK for key wScan codes (not vk)
                 onColor = numLock_On_Color;
                 offColor = numLock_Off_Color;
                 GUILabelForKey = labelColorNumLock;
             }
             else if (vkCode == VK_CAPSLOCK)
             {
-                keyToUpdate = keyboardNames.CAPS_LOCK;
+                keyToUpdate = keyboardNames.CAPS_LOCK; // Enum from Logitech SDK for key wScan codes (not vk)
                 onColor = capsLock_On_Color;
                 offColor = capsLock_Off_Color;
                 GUILabelForKey = labelColorCapsLock;
             }
             else if (vkCode == VK_SCROLL)
             {
-                keyToUpdate = keyboardNames.SCROLL_LOCK;
+                keyToUpdate = keyboardNames.SCROLL_LOCK; // Enum from Logitech SDK for key wScan codes (not vk)
                 onColor = scrollLock_On_Color;
                 offColor = scrollLock_Off_Color;
                 GUILabelForKey = labelColorScrollLock;
@@ -343,7 +364,7 @@ namespace G915X_KeyState_Indicator
                     greenPercentage: onColor.G,
                     bluePercentage: onColor.B
                 );
-                UpdateColorLabel(GUILabelForKey, onColor);
+                UpdateColorLabel(GUILabelForKey, onColor, keyNames[vkCode]);
             }
             else
             {
@@ -353,7 +374,7 @@ namespace G915X_KeyState_Indicator
                     greenPercentage: offColor.G,
                     bluePercentage: offColor.B
                 );
-                UpdateColorLabel(GUILabelForKey, offColor);
+                UpdateColorLabel(GUILabelForKey, offColor, keyNames[vkCode]);
             }
         }
 
