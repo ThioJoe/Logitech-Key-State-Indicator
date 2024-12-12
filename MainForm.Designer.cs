@@ -44,6 +44,9 @@
             this.labelLogitechStatus = new System.Windows.Forms.Label();
             this.labelClosesToTray = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.buttonOpenLogitechSDKPage = new System.Windows.Forms.Button();
+            this.buttonOpenAppGitHubPage = new System.Windows.Forms.Button();
+            this.buttonDownloadDLL = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // labelNumLock
@@ -159,7 +162,7 @@
             // buttonOpenDirectory
             // 
             this.buttonOpenDirectory.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonOpenDirectory.Location = new System.Drawing.Point(253, 349);
+            this.buttonOpenDirectory.Location = new System.Drawing.Point(231, 349);
             this.buttonOpenDirectory.Name = "buttonOpenDirectory";
             this.buttonOpenDirectory.Size = new System.Drawing.Size(190, 42);
             this.buttonOpenDirectory.TabIndex = 10;
@@ -187,11 +190,44 @@
             this.labelClosesToTray.TabIndex = 12;
             this.labelClosesToTray.Text = "(Closes to System Tray)";
             // 
+            // buttonOpenLogitechSDKPage
+            // 
+            this.buttonOpenLogitechSDKPage.Location = new System.Drawing.Point(553, 408);
+            this.buttonOpenLogitechSDKPage.Name = "buttonOpenLogitechSDKPage";
+            this.buttonOpenLogitechSDKPage.Size = new System.Drawing.Size(225, 42);
+            this.buttonOpenLogitechSDKPage.TabIndex = 13;
+            this.buttonOpenLogitechSDKPage.Text = "Visit Logitech SDK Website";
+            this.buttonOpenLogitechSDKPage.UseVisualStyleBackColor = true;
+            this.buttonOpenLogitechSDKPage.Click += new System.EventHandler(this.buttonOpenLogitechSDKPage_Click);
+            // 
+            // buttonOpenAppGitHubPage
+            // 
+            this.buttonOpenAppGitHubPage.Location = new System.Drawing.Point(553, 360);
+            this.buttonOpenAppGitHubPage.Name = "buttonOpenAppGitHubPage";
+            this.buttonOpenAppGitHubPage.Size = new System.Drawing.Size(225, 42);
+            this.buttonOpenAppGitHubPage.TabIndex = 14;
+            this.buttonOpenAppGitHubPage.Text = "Visit App GitHub Page";
+            this.buttonOpenAppGitHubPage.UseVisualStyleBackColor = true;
+            this.buttonOpenAppGitHubPage.Click += new System.EventHandler(this.buttonOpenAppGitHubPage_Click);
+            // 
+            // buttonDownloadDLL
+            // 
+            this.buttonDownloadDLL.Location = new System.Drawing.Point(553, 285);
+            this.buttonDownloadDLL.Name = "buttonDownloadDLL";
+            this.buttonDownloadDLL.Size = new System.Drawing.Size(225, 42);
+            this.buttonDownloadDLL.TabIndex = 15;
+            this.buttonDownloadDLL.Text = "Download Required DLL";
+            this.buttonDownloadDLL.UseVisualStyleBackColor = true;
+            this.buttonDownloadDLL.Click += new System.EventHandler(this.buttonDownloadDLL_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(808, 471);
+            this.Controls.Add(this.buttonDownloadDLL);
+            this.Controls.Add(this.buttonOpenAppGitHubPage);
+            this.Controls.Add(this.buttonOpenLogitechSDKPage);
             this.Controls.Add(this.labelClosesToTray);
             this.Controls.Add(this.labelLogitechStatus);
             this.Controls.Add(this.buttonOpenDirectory);
@@ -233,6 +269,9 @@
         private System.Windows.Forms.Label labelLogitechStatus;
         private System.Windows.Forms.Label labelClosesToTray;
         private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.Button buttonOpenLogitechSDKPage;
+        private System.Windows.Forms.Button buttonOpenAppGitHubPage;
+        private System.Windows.Forms.Button buttonDownloadDLL;
     }
 }
 

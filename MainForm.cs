@@ -35,9 +35,15 @@ namespace G915X_KeyState_Indicator
         private const int VM_SYSKEYDOWN = 0x104;
         private const int VM_SYSKEYUP = 0x105;
 
+        // App related constants
         private const string ConfigFileName = "Logi_KeyMonitor_Config.ini";
         private const string logiDllName = "LogitechLedEnginesWrapper.dll";
         private const string ProgramName = "Key State Indicator For Logitech";
+
+        // Other constants
+        private const string logitechSDKURL = "https://logitechg.com/en-us/innovation/developer-lab.html";
+        private const string appGitHubURL = "https://github.com/ThioJoe/Logitech-Key-State-Indicator";
+        private const string directDLLDownloadURL = "https://github.com/ThioJoe/Logitech-Key-State-Indicator/raw/refs/heads/master/Resources/LogitechLedEnginesWrapper.dll";
 
         List<int> keysToMonitor = new List<int> { 
             VK_NUMLOCK, 
@@ -433,6 +439,49 @@ namespace G915X_KeyState_Indicator
             {
                 this.WindowState = FormWindowState.Minimized;
                 this.Hide();
+            }
+        }
+
+        private void buttonOpenLogitechSDKPage_Click(object sender, EventArgs e)
+        {
+            // First show a message box asking if they want to open the page, if they hit OK then open the page
+            DialogResult result = MessageBox.Show($"This will open the Logitech SDK Webpage:\n{logitechSDKURL}" +
+                $"\n\nIf you prefer to download the required {logiDllName} file from there, you can find it in the \"LED Illumination SDK\" download. " +
+                $"\n\nExtract the ZIP file and navigate to:" +
+                $"\nLED > Lib > LogitechLedEnginesWrapper > x86" +
+                $"\n\n(Note: Use the x86 version, for some reason the x64 version doesn't seem to work)" +
+                $"\n\nContinue?",
+                "Open Logitech SDK Website", MessageBoxButtons.OKCancel, MessageBoxIcon.Information);
+
+            if (result == DialogResult.OK)
+            {
+                System.Diagnostics.Process.Start(logitechSDKURL);
+            }
+        }
+
+        private void buttonOpenAppGitHubPage_Click(object sender, EventArgs e)
+        {
+            // First show a message box asking if they want to open the page, if they hit OK then open the page
+            DialogResult result = MessageBox.Show($"This will open the GitHub page for this application:\n{appGitHubURL}" +
+                $"\n\nHere you can find the source code, report issues, or contribute to the project." +
+                $"\n\nYou'll also find the required {logiDllName} file in the \"Resources\" folder, the direct download button didn't work for some reason." +
+                $"\n\nContinue?",
+                "Open GitHub Page", MessageBoxButtons.OKCancel, MessageBoxIcon.Information);
+        }
+
+        private void buttonDownloadDLL_Click(object sender, EventArgs e)
+        {
+            // First show a message box asking if they want to download , if they hit OK then open the page
+            DialogResult result = MessageBox.Show($"This will download the required {logiDllName} file directly from this app's GitHub repository. It is signed by Logitech." +
+                $"\n\nThis is the file that allows the application to interface with Logitech keyboards." +
+                $"\nYou may also need to have Logitech's GHUB software installed, but it does NOT need to be running for this to work." +
+                $"\n\nIf you prefer, you can also get the DLL directly from Logitech using the other button to open their SDK website." +
+                $"\n\nDownload?",
+                "Download DLL", MessageBoxButtons.OKCancel, MessageBoxIcon.Information);
+
+            if (result == DialogResult.OK)
+            {
+                System.Diagnostics.Process.Start(directDLLDownloadURL);
             }
         }
 
