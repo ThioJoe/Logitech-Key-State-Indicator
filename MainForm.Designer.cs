@@ -39,6 +39,8 @@
             this.labelDefault = new System.Windows.Forms.Label();
             this.buttonOpenConfigFile = new System.Windows.Forms.Button();
             this.buttonOpenDirectory = new System.Windows.Forms.Button();
+            this.labelLogitechStatus = new System.Windows.Forms.Label();
+            this.labelClosesToTray = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // labelNumLock
@@ -78,7 +80,7 @@
             // 
             this.labelDebug.AutoSize = true;
             this.labelDebug.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.labelDebug.Location = new System.Drawing.Point(38, 418);
+            this.labelDebug.Location = new System.Drawing.Point(292, 275);
             this.labelDebug.Name = "labelDebug";
             this.labelDebug.Size = new System.Drawing.Size(151, 29);
             this.labelDebug.TabIndex = 3;
@@ -158,11 +160,32 @@
             this.buttonOpenDirectory.UseVisualStyleBackColor = true;
             this.buttonOpenDirectory.Click += new System.EventHandler(this.buttonOpenDirectory_Click);
             // 
+            // labelLogitechStatus
+            // 
+            this.labelLogitechStatus.AutoSize = true;
+            this.labelLogitechStatus.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelLogitechStatus.Location = new System.Drawing.Point(38, 414);
+            this.labelLogitechStatus.Name = "labelLogitechStatus";
+            this.labelLogitechStatus.Size = new System.Drawing.Size(248, 26);
+            this.labelLogitechStatus.TabIndex = 11;
+            this.labelLogitechStatus.Text = "Logitech Engine Status: ";
+            // 
+            // labelClosesToTray
+            // 
+            this.labelClosesToTray.AutoSize = true;
+            this.labelClosesToTray.Location = new System.Drawing.Point(616, 14);
+            this.labelClosesToTray.Name = "labelClosesToTray";
+            this.labelClosesToTray.Size = new System.Drawing.Size(176, 20);
+            this.labelClosesToTray.TabIndex = 12;
+            this.labelClosesToTray.Text = "(Closes to System Tray)";
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(808, 471);
+            this.Controls.Add(this.labelClosesToTray);
+            this.Controls.Add(this.labelLogitechStatus);
             this.Controls.Add(this.buttonOpenDirectory);
             this.Controls.Add(this.buttonOpenConfigFile);
             this.Controls.Add(this.labelDefault);
@@ -176,7 +199,9 @@
             this.Controls.Add(this.labelNumLock);
             this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Name = "MainForm";
-            this.Text = "Logitech Key Status Monitor - Statuses";
+            this.Text = "Logitech Key State Indicator - Statuses";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
+            this.SizeChanged += new System.EventHandler(this.MainForm_SizeChanged);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -195,6 +220,8 @@
         private System.Windows.Forms.Label labelDefault;
         private System.Windows.Forms.Button buttonOpenConfigFile;
         private System.Windows.Forms.Button buttonOpenDirectory;
+        private System.Windows.Forms.Label labelLogitechStatus;
+        private System.Windows.Forms.Label labelClosesToTray;
     }
 }
 

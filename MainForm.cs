@@ -15,6 +15,8 @@ using System.Reflection;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.IO;
+using static G915X_KeyState_Indicator.MainForm;
+using System.Diagnostics.Eventing.Reader;
 
 namespace G915X_KeyState_Indicator
 {
@@ -34,6 +36,8 @@ namespace G915X_KeyState_Indicator
         private const int VM_SYSKEYUP = 0x105;
 
         private const string ConfigFileName = "Logi_KeyMonitor_Config.ini";
+        private const string logiDllName = "LogitechLedEnginesWrapper.dll";
+        private const string ProgramName = "Logitech Key State Indicator";
 
         List<int> keysToMonitor = new List<int> { 
             VK_NUMLOCK, 
@@ -89,25 +93,24 @@ namespace G915X_KeyState_Indicator
         private static bool DEBUGMODE = false;
         private static int debugCounter = 0;
 
+
+        // ---------------------------------------------------------------------------------
+
         public MainForm()
         {
-            // Add exe current directory to PATH
-            string path = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
-
             #if DEBUG
             DEBUGMODE = true;
             #endif
 
+            // Add exe current directory to PATH
+            string path = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
+            InitStatus initStatus = CheckLogitechDLL(); // Checks if the Logitech DLL is present, and then tries to initialize the engine
+
             // Read the config file and load the colors
             LoadConfig();
-            LogitechGSDK.LogiLedInit(); // If this gives an error about module not found, try using x86 instead of x64. The x64 dll might be broken.
+            CreateTrayIcon(); // Create the icon before the rest of the initialization or else it will give errors
             InitializeComponent();
-            SetupUI();
-
-            if (DEBUGMODE)
-                labelDebug.Visible = true;
-            else
-                labelDebug.Visible = false;
+            SetupUI(initStatus: initStatus);
 
             // First set the base lighting for all keys
             // Set target device to per-key RGB keyboards
@@ -129,11 +132,39 @@ namespace G915X_KeyState_Indicator
 
         // ---------------------------------------------------------------------------------
 
-        private void SetupUI()
+        private void SetupUI(InitStatus initStatus)
         {
-            this.Text = "Logitech Key State Monitor";
+            this.Text = ProgramName + " - Statuses";
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
+
+            if (initStatus == InitStatus.SUCCESS)
+            {
+                labelLogitechStatus.Text = "Logitech Engine Status: Initialized";
+                labelLogitechStatus.ForeColor = Color.Green;
+            }
+            else if (initStatus == InitStatus.FAIL)
+            {
+                labelLogitechStatus.Text = "Logitech Engine Status: Failed to Initialize";
+                labelLogitechStatus.ForeColor = Color.Red;
+            }
+            else if (initStatus == InitStatus.NO_DLL)
+            {
+                labelLogitechStatus.Text = "Logitech Engine Status: DLL Not Found";
+                labelLogitechStatus.ForeColor = Color.Red;
+            }
+
+            if (DEBUGMODE)
+                labelDebug.Visible = true;
+            else
+                labelDebug.Visible = false;
+        }
+
+        public enum InitStatus
+        {
+            SUCCESS,
+            NO_DLL,
+            FAIL
         }
 
         private IntPtr SetHook(LowLevelKeyboardProc proc)
@@ -169,6 +200,33 @@ namespace G915X_KeyState_Indicator
                 }
             }
             return CallNextHookEx(_hookID, nCode, wParam, lParam);
+        }
+
+        private InitStatus CheckLogitechDLL()
+        {
+            // Look for the dll first, LogitechLedEnginesWrapper.dll
+            if (!File.Exists(logiDllName))
+            {
+                // If the dll is not found, show a message box and exit the application
+                MessageBox.Show("LogitechLedEnginesWrapper.dll not found.",
+                    "Logitech DLL Not Found", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                return InitStatus.NO_DLL;
+            }
+
+            // Initialize the Logitech engine
+            bool initSuccess = LogitechGSDK.LogiLedInit();
+            if (!initSuccess)
+            {
+                MessageBox.Show("Failed to load Logitech engine. Make sure the Logitech GHUB software is installed. " +
+                    $"Also if you used the 64 bit version of {logiDllName}, use the 32 bit version. I've found the 64 bit version didn't work for me.",
+                    "Logitech DLL Not Found", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return InitStatus.FAIL;
+            }
+            else
+            {
+                return InitStatus.SUCCESS;
+            }
         }
 
         private void UpdateColorLabel(Label label, RGBTuple color)
@@ -208,15 +266,24 @@ namespace G915X_KeyState_Indicator
             UpdateLogitechKeyLight(isKeyOn, vkCode);
         }
 
-        protected override void OnFormClosing(FormClosingEventArgs e)
+        private void ShutDown_HooksAndLogi()
         {
             if (_hookID != IntPtr.Zero)
             {
                 UnhookWindowsHookEx(_hookID);
             }
             LogitechGSDK.LogiLedShutdown();
-            base.OnFormClosing(e);
         }
+
+        //protected override void OnFormClosing(FormClosingEventArgs e)
+        //{
+        //    if (_hookID != IntPtr.Zero)
+        //    {
+        //        UnhookWindowsHookEx(_hookID);
+        //    }
+        //    LogitechGSDK.LogiLedShutdown();
+        //    base.OnFormClosing(e);
+        //}
 
         private static bool IsKeyStateOn(int keyEnum)
         {
@@ -225,8 +292,6 @@ namespace G915X_KeyState_Indicator
 
         private void UpdateLogitechKeyLight(bool isOn, int vkCode)
         {
-            
-
             // Set key colors for each
             RGBTuple onColor;
             RGBTuple offColor;
@@ -329,6 +394,9 @@ namespace G915X_KeyState_Indicator
             string exeDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             System.Diagnostics.Process.Start(exeDir);
         }
+
+        // --------------------------------------------------------------------------------
+
     } // End of MainForm
 
 } // End of namespace
