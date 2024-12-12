@@ -140,12 +140,25 @@ namespace G915X_KeyState_Indicator
             // Load debug mode
             try
             {
-                DEBUGMODE = ReadConfigIni(sectionName, "debugMode").Trim().ToLower() == "true";
+                string debugModeSetting = ReadConfigIni(sectionName, "debugMode").Trim().ToLower();
+                DEBUGMODE = ValidateAndParseBool(stringValue: debugModeSetting, settingName: "debugMode", defaultOnFail: false);
             }
             catch (Exception ex)
             {
                 errors.Add($"Failed to load debugMode setting: {ex.Message}");
                 DEBUGMODE = false;
+            }
+
+            // Minimalize to tray
+            try
+            {
+                string minimizedString = ReadConfigIni(sectionName, "minimize_to_tray").Trim().ToLower();
+                startMinimizedToTray = ValidateAndParseBool(stringValue:minimizedString, settingName:"minimize_to_tray", defaultOnFail:false);
+            }
+            catch (Exception ex)
+            {
+                errors.Add($"Failed to load minimize_to_tray setting: {ex.Message}");
+                startMinimizedToTray = false;
             }
 
             // Show errors if any occurred
@@ -160,6 +173,19 @@ namespace G915X_KeyState_Indicator
             }
         }
 
+        private bool ValidateAndParseBool(string stringValue, string settingName, bool defaultOnFail)
+        {
+            if (string.Equals(stringValue, "true", StringComparison.OrdinalIgnoreCase))
+                return true;
+            else if (string.Equals(stringValue, "false", StringComparison.OrdinalIgnoreCase))
+                return false;
+            else
+            {
+                MessageBox.Show($"Invalid boolean value for {settingName}. Must be 'true' or 'false.");
+                return defaultOnFail;
+            }
+        }
+
         private void UseDefaults()
         {
             default_Color = _default_Color;
@@ -170,6 +196,7 @@ namespace G915X_KeyState_Indicator
             scrollLock_Off_Color = _scrollLock_Off_Color;
             numLock_Off_Color = _numLock_Off_Color;
             DEBUGMODE = false;
+            startMinimizedToTray = false;
         }
 
         private void WriteTemplateConfig()
@@ -194,6 +221,7 @@ capsLock_Off_Color=default
 scrollLock_Off_Color=default
 numLock_Off_Color=default
 
+minimize_to_tray=false
 debugMode=false
 
 """;

@@ -37,7 +37,7 @@ namespace G915X_KeyState_Indicator
 
         private const string ConfigFileName = "Logi_KeyMonitor_Config.ini";
         private const string logiDllName = "LogitechLedEnginesWrapper.dll";
-        private const string ProgramName = "Logitech Key State Indicator";
+        private const string ProgramName = "Key State Indicator For Logitech";
 
         List<int> keysToMonitor = new List<int> { 
             VK_NUMLOCK, 
@@ -93,6 +93,8 @@ namespace G915X_KeyState_Indicator
         private static bool DEBUGMODE = false;
         private static int debugCounter = 0;
 
+        // Other Defaults
+        private static bool startMinimizedToTray = false;
 
         // ---------------------------------------------------------------------------------
 
@@ -108,8 +110,9 @@ namespace G915X_KeyState_Indicator
 
             // Read the config file and load the colors
             LoadConfig();
-            CreateTrayIcon(); // Create the icon before the rest of the initialization or else it will give errors
+            CreateTrayIcon(startMinimized:startMinimizedToTray); // Create the icon before the rest of the initialization or else it will give errors
             InitializeComponent();
+
             SetupUI(initStatus: initStatus);
 
             // First set the base lighting for all keys
@@ -127,6 +130,13 @@ namespace G915X_KeyState_Indicator
             foreach (int key in keysToMonitor)
             {
                 UpdateKeyStatus(key);
+            }
+
+            // Apparently need to do this both here AND in the Load event handler or else it doesn't work
+            if (startMinimizedToTray)
+            {
+                this.WindowState = FormWindowState.Minimized;
+                this.Hide();
             }
         }
 
@@ -393,6 +403,16 @@ namespace G915X_KeyState_Indicator
             // Open the directory of the current exe
             string exeDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             System.Diagnostics.Process.Start(exeDir);
+        }
+
+        private void MainForm_Load(object sender, EventArgs e)
+        {
+            // Apparently need to do this both here AND after initalizing the form or else it doesn't work
+            if (startMinimizedToTray)
+            {
+                this.WindowState = FormWindowState.Minimized;
+                this.Hide();
+            }
         }
 
         // --------------------------------------------------------------------------------

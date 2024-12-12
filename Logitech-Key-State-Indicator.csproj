@@ -7,7 +7,7 @@
     <ProjectGuid>{1BA57D29-1CA7-452A-89BB-DCFA86B8FB2C}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <RootNamespace>G915X_KeyState_Indicator</RootNamespace>
-    <AssemblyName>NumlockIndicator</AssemblyName>
+    <AssemblyName>Logitech_Key_State_Indicator</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

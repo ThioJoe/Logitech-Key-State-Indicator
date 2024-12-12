@@ -12,7 +12,7 @@ namespace G915X_KeyState_Indicator
     {
         private NotifyIcon trayIcon;
 
-        private void CreateTrayIcon()
+        private void CreateTrayIcon(bool startMinimized)
         {
             trayIcon = new NotifyIcon
             {
@@ -48,7 +48,7 @@ namespace G915X_KeyState_Indicator
         private void RestoreFromTray(object sender, EventArgs e)
         {
             this.WindowState = FormWindowState.Normal;
-            this.ShowInTaskbar = true;
+            //this.ShowInTaskbar = true;
             this.Show();
         }
 
@@ -98,7 +98,7 @@ namespace G915X_KeyState_Indicator
             {
                 e.Cancel = true;
                 this.WindowState = FormWindowState.Minimized;
-                this.ShowInTaskbar = false;
+                //this.ShowInTaskbar = false; // This isn't necessary and apparently can prevent some messages from reaching the window
                 this.Hide();
             }
         }

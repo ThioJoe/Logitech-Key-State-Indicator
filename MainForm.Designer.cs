@@ -204,6 +204,7 @@
             this.Name = "MainForm";
             this.Text = "Logitech Key State Indicator - Statuses";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
+            this.Load += new System.EventHandler(this.MainForm_Load);
             this.SizeChanged += new System.EventHandler(this.MainForm_SizeChanged);
             this.ResumeLayout(false);
             this.PerformLayout();
