@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.labelNumLock = new System.Windows.Forms.Label();
             this.labelScrollLock = new System.Windows.Forms.Label();
             this.labelCapsLock = new System.Windows.Forms.Label();
@@ -173,9 +174,10 @@
             // labelClosesToTray
             // 
             this.labelClosesToTray.AutoSize = true;
-            this.labelClosesToTray.Location = new System.Drawing.Point(616, 14);
+            this.labelClosesToTray.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelClosesToTray.Location = new System.Drawing.Point(568, 15);
             this.labelClosesToTray.Name = "labelClosesToTray";
-            this.labelClosesToTray.Size = new System.Drawing.Size(176, 20);
+            this.labelClosesToTray.Size = new System.Drawing.Size(224, 25);
             this.labelClosesToTray.TabIndex = 12;
             this.labelClosesToTray.Text = "(Closes to System Tray)";
             // 
@@ -197,6 +199,7 @@
             this.Controls.Add(this.labelCapsLock);
             this.Controls.Add(this.labelScrollLock);
             this.Controls.Add(this.labelNumLock);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Name = "MainForm";
             this.Text = "Logitech Key State Indicator - Statuses";

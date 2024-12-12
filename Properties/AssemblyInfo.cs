@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("G915X-KeyState-Indicator")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("Logitech Key State Indicator")]
+[assembly: AssemblyDescription("Logitech Key State Indicator")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("G915X-KeyState-Indicator")]
-[assembly: AssemblyCopyright("Copyright ©  2024")]
+[assembly: AssemblyCompany("ThioJoe")]
+[assembly: AssemblyProduct("Logitech Key State Indicator")]
+[assembly: AssemblyCopyright("ThioJoe")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

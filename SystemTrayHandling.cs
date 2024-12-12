@@ -17,7 +17,7 @@ namespace G915X_KeyState_Indicator
             trayIcon = new NotifyIcon
             {
                 Text = ProgramName,
-                Icon = SystemIcons.Application,
+                Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath), // Uses the icon of the current Exe
                 Visible = true
             };
 
