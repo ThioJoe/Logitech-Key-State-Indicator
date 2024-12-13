@@ -17,6 +17,12 @@ using System.Security.Cryptography;
 using System.IO;
 using static G915X_KeyState_Indicator.MainForm;
 using System.Diagnostics.Eventing.Reader;
+using System.Net;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using System.Diagnostics;
+using System.Web.Script.Serialization;
+using System.Security.Cryptography.X509Certificates;
+using System.Runtime.ConstrainedExecution;
 
 namespace G915X_KeyState_Indicator
 {
@@ -44,9 +50,13 @@ namespace G915X_KeyState_Indicator
         private const string logitechSDKURL = "https://logitechg.com/en-us/innovation/developer-lab.html";
         private const string appGitHubURL = "https://github.com/ThioJoe/Logitech-Key-State-Indicator";
         private const string directDLLDownloadURL = "https://github.com/ThioJoe/Logitech-Key-State-Indicator/raw/refs/heads/master/Resources/LogitechLedEnginesWrapper.dll";
+        private const string dllAPIURL = "https://api.github.com/repos/ThioJoe/Logitech-Key-State-Indicator/contents/Resources/LogitechLedEnginesWrapper.dll";
+        // Hard coding these but can't rely on them 100% in case they get updated. Though they haven't updated them since 2018.
+        private const string x64dllHash = "46A0773E5AE6EF5B24557F3051E18A62527C7B2C133360DFB21522CBFE9CBDD1";
+        private const string x86dllHash = "189172A1DE545A9F8058A1BF0980FA42F8CFA203340981EE38233094F75C3FD2";
 
-        List<int> keysToMonitor = new List<int> { 
-            VK_NUMLOCK, 
+        List<int> keysToMonitor = new List<int> {
+            VK_NUMLOCK,
             VK_CAPSLOCK,
             VK_SCROLL
         };
@@ -108,32 +118,36 @@ namespace G915X_KeyState_Indicator
 
         // Other Defaults
         private static bool startMinimizedToTray = false;
+        private static InitStatus initStatus = InitStatus.NOT_CHECKED;
 
         // ---------------------------------------------------------------------------------
 
         public MainForm()
         {
-            #if DEBUG
+#if DEBUG
             DEBUGMODE = true;
-            #endif
+#endif
 
             // Add exe current directory to PATH
             string path = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
-            InitStatus initStatus = CheckLogitechDLL(); // Checks if the Logitech DLL is present, and then tries to initialize the engine
+            initStatus = CheckLogitechDLL(); // Checks if the Logitech DLL is present, and then tries to initialize the engine
 
             // Read the config file and load the colors
             LoadConfig();
-            CreateTrayIcon(startMinimized:startMinimizedToTray); // Create the icon before the rest of the initialization or else it will give errors
+            CreateTrayIcon(startMinimized: startMinimizedToTray); // Create the icon before the rest of the initialization or else it will give errors
             InitializeComponent();
 
             SetupUI(initStatus: initStatus);
 
-            // First set the base lighting for all keys
-            // Set target device to per-key RGB keyboards
-            LogitechGSDK.LogiLedSetTargetDevice(LogitechGSDK.LOGI_DEVICETYPE_PERKEY_RGB);
+            if (initStatus == InitStatus.SUCCESS)
+            {
+                // First set the base lighting for all keys
+                // Set target device to per-key RGB keyboards
+                LogitechGSDK.LogiLedSetTargetDevice(LogitechGSDK.LOGI_DEVICETYPE_PERKEY_RGB);
 
-            LogitechGSDK.LogiLedSetLighting(redPercentage: default_Color.R, greenPercentage: default_Color.G, bluePercentage: default_Color.B);
-            UpdateColorLabel(labelColorDefault, default_Color, "Default");
+                LogitechGSDK.LogiLedSetLighting(redPercentage: default_Color.R, greenPercentage: default_Color.G, bluePercentage: default_Color.B);
+                UpdateColorLabel(labelColorDefault, default_Color, "Default");
+            }
 
             // Set up keyboard hook
             _proc = HookCallback;
@@ -187,7 +201,8 @@ namespace G915X_KeyState_Indicator
         {
             SUCCESS,
             NO_DLL,
-            FAIL
+            FAIL,
+            NOT_CHECKED
         }
 
         private IntPtr SetHook(LowLevelKeyboardProc proc)
@@ -227,8 +242,13 @@ namespace G915X_KeyState_Indicator
 
         private InitStatus CheckLogitechDLL()
         {
+            // Get full path to the DLL
+            string exeDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string logiDllName = Path.Combine(exeDir, "LogitechLedEnginesWrapper.dll");
+            string logiDllPath = Path.Combine(exeDir, logiDllName);
+
             // Look for the dll first, LogitechLedEnginesWrapper.dll
-            if (!File.Exists(logiDllName))
+            if (!File.Exists(logiDllPath))
             {
                 // If the dll is not found, show a message box and exit the application
                 MessageBox.Show("LogitechLedEnginesWrapper.dll not found.",
@@ -237,13 +257,59 @@ namespace G915X_KeyState_Indicator
                 return InitStatus.NO_DLL;
             }
 
+            string failMessage = "Failed to load Logitech engine. General Tips:\n 1. Make sure the Logitech GHUB software is installed (it doesn't need to be running). " +
+                $"\n2. If you used the 64 bit version of {logiDllName}, use the 32 bit version. I've found the 64 bit version didn't work for me.";
+
             // Initialize the Logitech engine
-            bool initSuccess = LogitechGSDK.LogiLedInit();
+            bool initSuccess;
+            try
+            {
+                initSuccess = LogitechGSDK.LogiLedInit();
+            }
+            catch (Exception ex)
+            {
+                string messageToShow = failMessage + $"\n\nHere is the Error:\n" + ex.Message;
+
+                if (messageToShow.Contains("incorrect format") || messageToShow.ToLower().Contains("0x8007000B"))
+                {
+                    if (GetSha256Hash(logiDllPath) == x64dllHash)
+                        messageToShow += "\n\nSPECIAL NOTE: This error is because you are trying to use the x64 (64-bit) version of the DLL. You must use the x86 (32-bit) version.";
+                    else 
+                        messageToShow += "\n\nSPECIAL NOTE: This particular error is likely because you used the 64 bit version of the DLL. Use the 32 bit version instead.";
+                }
+
+                MessageBox.Show(messageToShow,
+                    "Logitech Engine Initialization Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return InitStatus.FAIL;
+            }
+
             if (!initSuccess)
             {
-                MessageBox.Show("Failed to load Logitech engine. Make sure the Logitech GHUB software is installed. " +
-                    $"Also if you used the 64 bit version of {logiDllName}, use the 32 bit version. I've found the 64 bit version didn't work for me.",
-                    "Logitech DLL Not Found", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                string messageToShow = failMessage + "\n\nSPECIAL NOTE: ";
+
+                // Check if the file is signed by Logitech
+                var (isValid, signerName) = VerifySignature(logiDllPath);
+
+                // First check the hard coded hash
+                if (GetSha256Hash(logiDllPath) == x86dllHash)
+                {
+                    messageToShow += "You definitely have the correct DLL, but it still failed to initialize the Logitech engine. Make sure you have the GHUB software is installed";
+                }
+                else if (!isValid && signerName != null)
+                {
+                    messageToShow += $"The DLL appears to have an invalid or untrusted signature. It might be corrupted.";
+                }
+                else if (!isValid)
+                {
+                    messageToShow += "The DLL is NOT signed by Logitech. It may be corrupted or you're using the wrong file.";
+                }
+                else if (signerName.StartsWith("Logitech"))
+                {
+                    messageToShow += "The DLL appears likely valid, but it still failed to initialize Logitech engine. Make sure the GHUB software is installed.";
+                }
+                
+                MessageBox.Show(messageToShow, "Failed to attach to Logitech Engine", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
                 return InitStatus.FAIL;
             }
             else
@@ -309,7 +375,11 @@ namespace G915X_KeyState_Indicator
             {
                 UnhookWindowsHookEx(_hookID);
             }
-            LogitechGSDK.LogiLedShutdown();
+
+            if (initStatus == InitStatus.SUCCESS)
+            {
+                LogitechGSDK.LogiLedShutdown();
+            }
         }
 
         //protected override void OnFormClosing(FormClosingEventArgs e)
@@ -364,24 +434,91 @@ namespace G915X_KeyState_Indicator
             // Then set the specific color for NUM_LOCK
             if (isOn)
             {
-                LogitechGSDK.LogiLedSetLightingForKeyWithKeyName (
+                UpdateColorLabel(GUILabelForKey, onColor, keyNames[vkCode]);
+
+                if (initStatus != InitStatus.SUCCESS)
+                    return;
+
+                LogitechGSDK.LogiLedSetLightingForKeyWithKeyName(
                     keyCode: keyToUpdate,
                     redPercentage: onColor.R,
                     greenPercentage: onColor.G,
                     bluePercentage: onColor.B
                 );
-                UpdateColorLabel(GUILabelForKey, onColor, keyNames[vkCode]);
             }
             else
             {
+                UpdateColorLabel(GUILabelForKey, offColor, keyNames[vkCode]);
+
+                if (initStatus != InitStatus.SUCCESS)
+                    return;
+
                 LogitechGSDK.LogiLedSetLightingForKeyWithKeyName(
                     keyCode: keyToUpdate,
                     redPercentage: offColor.R,
                     greenPercentage: offColor.G,
                     bluePercentage: offColor.B
                 );
-                UpdateColorLabel(GUILabelForKey, offColor, keyNames[vkCode]);
             }
+        }
+        
+        private string GetSha256Hash(string filePath)
+        {
+            using (FileStream stream = File.OpenRead(filePath))
+            {
+                SHA256Managed sha = new SHA256Managed();
+                byte[] hash = sha.ComputeHash(stream);
+                return BitConverter.ToString(hash).Replace("-", String.Empty);
+            }
+        }
+
+        private (bool isValid, string signerName) VerifySignature(string filePath)
+        {
+            X509Certificate2 cert;
+            string signerName;
+
+            try
+            {
+                cert = new X509Certificate2(filePath);
+            }
+            catch
+            {
+                return (false, null);
+            }
+
+            try
+            {
+                signerName = cert.GetNameInfo(X509NameType.SimpleName, false);
+            }
+            catch
+            {
+                return (false, null);
+            }
+
+            // Check if the certificate is valid
+            try
+            {
+                cert.Verify(); // Throws an exception if not valid
+
+            }
+            catch (CryptographicException)
+            {
+                if (signerName != null)
+                {
+                    return (false, signerName);
+                }
+                else
+                {
+                    return (false, null);
+                }
+            }
+            catch
+            {
+                return (false, null);
+            }
+
+            signerName = cert.GetNameInfo(X509NameType.SimpleName, false);
+            return (true, signerName);
         }
 
         // Returned as pointer in the lparam of the hook callback
@@ -467,11 +604,16 @@ namespace G915X_KeyState_Indicator
                 $"\n\nYou'll also find the required {logiDllName} file in the \"Resources\" folder, the direct download button didn't work for some reason." +
                 $"\n\nContinue?",
                 "Open GitHub Page", MessageBoxButtons.OKCancel, MessageBoxIcon.Information);
+
+            if (result == DialogResult.OK)
+            {
+                System.Diagnostics.Process.Start(appGitHubURL);
+            }
         }
 
         private void buttonDownloadDLL_Click(object sender, EventArgs e)
         {
-            // First show a message box asking if they want to download , if they hit OK then open the page
+            // First show a message box asking if they want to download, if they click OK then proceed
             DialogResult result = MessageBox.Show($"This will download the required {logiDllName} file directly from this app's GitHub repository. It is signed by Logitech." +
                 $"\n\nThis is the file that allows the application to interface with Logitech keyboards." +
                 $"\nYou may also need to have Logitech's GHUB software installed, but it does NOT need to be running for this to work." +
@@ -481,9 +623,106 @@ namespace G915X_KeyState_Indicator
 
             if (result == DialogResult.OK)
             {
-                System.Diagnostics.Process.Start(directDLLDownloadURL);
+                DownloadDLL();
             }
         }
+
+        // From: https://stackoverflow.com/a/30201071/17312053
+        private void DownloadDLL()
+        {
+            //GetFileInfo();
+            // Get current directory
+            string currentDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            //Retrieve the path from the input textbox
+            string filepath = currentDir + $"\\{logiDllName}";
+
+            // If it already exists, ask if they want to overwrite it
+            if (File.Exists(filepath))
+            {
+                DialogResult result = MessageBox.Show($"The file {logiDllName} already exists in the application directory. Do you want to overwrite it?",
+                    "File Already Exists", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                if (result == DialogResult.No)
+                {
+                    return;
+                }
+            }
+
+            //Create a WebClient to use as our download proxy for the program.
+            WebClient webClient = new WebClient();
+
+            //Attach the DownloadFileCompleted event to your new AsyncCompletedEventHandler Completed
+            //so when the event occurs the method is called.
+            webClient.DownloadFileCompleted += (sender, e) => Completed(sender, e, filepath);
+
+            //Attempt to actually download the file, this is where the error that you
+            //won't see is probably occurring, this is because it checks the url in 
+            //the blocking function internally and won't execute the download itself 
+            //until this clears.
+            webClient.DownloadFileAsync(new Uri(directDLLDownloadURL), filepath);
+        }
+
+        //This is your method that will pop when the AsyncCompletedEvent is fired,
+        //this doesn't mean that the download was successful though which is why
+        //it's misleading, it just means that the Async process completed.
+        private void Completed(object sender, AsyncCompletedEventArgs e, string filepath)
+        {
+            // Check if the file exists
+            if (File.Exists(filepath))
+            {
+                // First check the known good hash
+                string hash = GetSha256Hash(filepath);
+                if (hash == x86dllHash)
+                {
+                    MessageBox.Show($"Download completed!\n\n\nRestart the app for it to take effect.");
+                    return;
+                }
+
+                // Check if the file is signed by Logitech
+                var (isValid, signerName) = VerifySignature(filepath);
+                if (isValid && signerName.StartsWith("Logitech"))
+                {
+                    MessageBox.Show($"Download completed!\nRestart the app for it to take effect.");
+                }
+                else if (!isValid)
+                {
+                    MessageBox.Show("Download completed it doesn't seem correct. It might have been corrupted. Try downloading it yourself.");
+                }
+            }
+            else
+            {
+                MessageBox.Show("Download failed! Try downloading it yourself with one of the other buttons.");
+            }
+        }
+
+        //private void GetFileInfo()
+        //{
+        //    string url = dllAPIURL;
+        //    HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+        //    request.UserAgent = ProgramName;
+        //    request.Accept = "application/vnd.github+json";
+        //    //request.Headers.Add("Authorization", "Bearer <YOUR-TOKEN>");
+        //    request.Headers.Add("X-GitHub-Api-Version", "2022-11-28");
+
+        //    try
+        //    {
+        //        using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+        //        using (StreamReader reader = new StreamReader(response.GetResponseStream()))
+        //        {
+        //            string responseText = reader.ReadToEnd();
+        //            var serializer = new JavaScriptSerializer();
+        //            dynamic result = serializer.Deserialize<dynamic>(responseText);
+        //            string sha = result["sha"];
+        //            string base64Content = result["content"];
+        //            string encoding = result["encoding"];
+
+        //            Debug.WriteLine(responseText);
+        //        }
+        //    }
+        //    catch (WebException ex)
+        //    {
+        //        Debug.WriteLine($"Error: {ex.Message}");
+        //    }
+        //}
 
         // --------------------------------------------------------------------------------
 
