@@ -1,4 +1,7 @@
-# Key State Indicator for Logitech Keyboards
+<p align="center"><img width=96 src="https://github.com/user-attachments/assets/b4f3044b-e7ba-4df7-86db-52582e4a8323"></p>
+
+<h1 align = 'center'> Key State Indicator for Logitech Keyboards</h1>
+<br>
 
 Uses the Logitech G SDK to set the color of num lock, scroll lock, and caps lock based on their toggle status.
 
