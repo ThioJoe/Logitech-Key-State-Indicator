@@ -61,7 +61,7 @@ namespace G915X_KeyState_Indicator
             // Check if the value is "default"
             if (string.Equals(colorValue, "default", StringComparison.OrdinalIgnoreCase))
             {
-                return defaultColor;
+                return default_key_color;
             }
 
             try
@@ -129,36 +129,36 @@ namespace G915X_KeyState_Indicator
             }
 
             // Load all color, specifying the default value for each to use if there's an error
-            default_key_color = LoadColor("default_key_color", _default_key_Color);
-            default_otherDevice_color = LoadColor("default_other_device_color", _default_otherDevice_Color);
-            capsLock_On_Color = LoadColor("capsLock_On_color", _capsLock_On_Color);
-            scrollLock_On_Color = LoadColor("scrollLock_On_color", _scrollLock_On_Color);
-            numLock_On_Color = LoadColor("numLock_On_color", _numLock_On_Color);
-            capsLock_Off_Color = LoadColor("capsLock_Off_color", _capsLock_Off_Color);
-            scrollLock_Off_Color = LoadColor("scrollLock_Off_color", _scrollLock_Off_Color);
-            numLock_Off_Color = LoadColor("numLock_Off_color", _numLock_Off_Color);
+            default_key_color = LoadColor(ConfigSettingNames.DefaultKeyColor, _default_key_Color);
+            default_otherDevice_color = LoadColor(ConfigSettingNames.DefaultOtherDeviceColor, _default_otherDevice_Color);
+            capsLock_On_Color = LoadColor(ConfigSettingNames.CapsLockOnColor, _capsLock_On_Color);
+            scrollLock_On_Color = LoadColor(ConfigSettingNames.ScrollLockOnColor, _scrollLock_On_Color);
+            numLock_On_Color = LoadColor(ConfigSettingNames.NumLockOnColor, _numLock_On_Color);
+            capsLock_Off_Color = LoadColor(ConfigSettingNames.CapsLockOffColor, _capsLock_Off_Color);
+            scrollLock_Off_Color = LoadColor(ConfigSettingNames.ScrollLockOffColor, _scrollLock_Off_Color);
+            numLock_Off_Color = LoadColor(ConfigSettingNames.NumLockOffColor, _numLock_Off_Color);
 
             // Load debug mode
             try
             {
-                string debugModeSetting = ReadConfigIni(sectionName, "debugMode").Trim().ToLower();
-                DEBUGMODE = ValidateAndParseBool(stringValue: debugModeSetting, settingName: "debugMode", defaultOnFail: false);
+                string debugModeSetting = ReadConfigIni(sectionName, ConfigSettingNames.DebugMode).Trim().ToLower();
+                DEBUGMODE = ValidateAndParseBool(stringValue: debugModeSetting, settingName: ConfigSettingNames.DebugMode, defaultOnFail: false);
             }
             catch (Exception ex)
             {
-                errors.Add($"Failed to load setting: debugMode:\n    {ex.Message}");
+                errors.Add($"Failed to load setting: {ConfigSettingNames.DebugMode}:\n    {ex.Message}");
                 DEBUGMODE = false;
             }
 
             // Minimalize to tray
             try
             {
-                string minimizedString = ReadConfigIni(sectionName, "minimize_to_tray").Trim().ToLower();
-                startMinimizedToTray = ValidateAndParseBool(stringValue:minimizedString, settingName:"minimize_to_tray", defaultOnFail:false);
+                string minimizedString = ReadConfigIni(sectionName, ConfigSettingNames.MinimizeToTray).Trim().ToLower();
+                startMinimizedToTray = ValidateAndParseBool(stringValue:minimizedString, settingName: ConfigSettingNames.MinimizeToTray, defaultOnFail:false);
             }
             catch (Exception ex)
             {
-                errors.Add($"Failed to load setting: minimize_to_tray\n    {ex.Message}");
+                errors.Add($"Failed to load setting: {ConfigSettingNames.MinimizeToTray}\n    {ex.Message}");
                 startMinimizedToTray = false;
             }
 
@@ -202,32 +202,46 @@ namespace G915X_KeyState_Indicator
             startMinimizedToTray = false;
         }
 
+        private class ConfigSettingNames // Just a class to hold the setting names for easy access
+        {
+            public const string DefaultKeyColor = "default_key_color";
+            public const string DefaultOtherDeviceColor = "default_other_device_color";
+            public const string CapsLockOnColor = "capsLock_On_color";
+            public const string ScrollLockOnColor = "scrollLock_On_color";
+            public const string NumLockOnColor = "numLock_On_color";
+            public const string CapsLockOffColor = "capsLock_Off_color";
+            public const string ScrollLockOffColor = "scrollLock_Off_color";
+            public const string NumLockOffColor = "numLock_Off_color";
+            public const string DebugMode = "debugMode";
+            public const string MinimizeToTray = "minimize_to_tray";
+        }
+
         private void WriteTemplateConfig()
         {
-            string defaultTemplateString = """
+            string defaultTemplateString = $"""
 # Set the colors. They must be in comma separated format of 3 numbers from 0 to 255 (R,G,B)
-    # For example, a pure green key at max brightness would be:    whateverSetting=0,255,0
-# Or, you can use the special keyword "default" to make it equal to the default color
-    # For example  whateverSetting=default
+# For example, a pure green key at max brightness would be:    whateverSetting=0,255,0
+# Or, you can use the special keyword "default" to make it equal to the default key color
+# For example  whateverSetting=default
 
 [Settings]
-    # The color of the rest of the keys on the keyboard
-default_key_color=0,0,255
-    # The color for other logitech devices, if any. Unfortunately there doesn't seem to be a way to just keep their current color automatically. It should go back when the app closes though.
-default_other_device_color=0,0,255
+# The color of the rest of the keys on the keyboard
+{ConfigSettingNames.DefaultKeyColor}=0,0,255
+# The color for other logitech devices, if any. Unfortunately there doesn't seem to be a way to just keep their current color automatically. It should go back when the app closes though.
+{ConfigSettingNames.DefaultOtherDeviceColor}=0,0,255
 
-    # The color of each key while its status is ON
-capsLock_On_color=255,0,0
-scrollLock_On_color=255,0,0
-numLock_On_color=255,0,0
+# The color of each key while its status is ON
+{ConfigSettingNames.CapsLockOnColor}=255,0,0
+{ConfigSettingNames.ScrollLockOnColor}=255,0,0
+{ConfigSettingNames.NumLockOnColor}=255,0,0
 
-    # The color of each key while its status is OFF.
-capsLock_Off_color=default
-scrollLock_Off_color=default
-numLock_Off_color=default
+# The color of each key while its status is OFF.
+{ConfigSettingNames.CapsLockOffColor}=default
+{ConfigSettingNames.ScrollLockOffColor}=default
+{ConfigSettingNames.NumLockOffColor}=default
 
-minimize_to_tray=false
-debugMode=false
+{ConfigSettingNames.MinimizeToTray}=false
+{ConfigSettingNames.DebugMode}=false
 
 """;
             try

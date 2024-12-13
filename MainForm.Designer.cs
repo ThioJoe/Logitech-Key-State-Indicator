@@ -47,6 +47,7 @@
             this.buttonOpenLogitechSDKPage = new System.Windows.Forms.Button();
             this.buttonOpenAppGitHubPage = new System.Windows.Forms.Button();
             this.buttonDownloadDLL = new System.Windows.Forms.Button();
+            this.buttonReloadConfig = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // labelNumLock
@@ -86,7 +87,7 @@
             // 
             this.labelDebug.AutoSize = true;
             this.labelDebug.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.labelDebug.Location = new System.Drawing.Point(292, 275);
+            this.labelDebug.Location = new System.Drawing.Point(340, 200);
             this.labelDebug.Name = "labelDebug";
             this.labelDebug.Size = new System.Drawing.Size(151, 29);
             this.labelDebug.TabIndex = 3;
@@ -144,9 +145,9 @@
             this.labelDefault.Location = new System.Drawing.Point(85, 285);
             this.labelDefault.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.labelDefault.Name = "labelDefault";
-            this.labelDefault.Size = new System.Drawing.Size(180, 32);
+            this.labelDefault.Size = new System.Drawing.Size(236, 32);
             this.labelDefault.TabIndex = 8;
-            this.labelDefault.Text = "Default Color";
+            this.labelDefault.Text = "Default Key Color";
             // 
             // buttonOpenConfigFile
             // 
@@ -220,11 +221,22 @@
             this.buttonDownloadDLL.UseVisualStyleBackColor = true;
             this.buttonDownloadDLL.Click += new System.EventHandler(this.buttonDownloadDLL_Click);
             // 
+            // buttonReloadConfig
+            // 
+            this.buttonReloadConfig.Location = new System.Drawing.Point(616, 115);
+            this.buttonReloadConfig.Name = "buttonReloadConfig";
+            this.buttonReloadConfig.Size = new System.Drawing.Size(101, 78);
+            this.buttonReloadConfig.TabIndex = 16;
+            this.buttonReloadConfig.Text = "Reload Config\r\n";
+            this.buttonReloadConfig.UseVisualStyleBackColor = true;
+            this.buttonReloadConfig.Click += new System.EventHandler(this.buttonReloadConfig_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(808, 471);
+            this.Controls.Add(this.buttonReloadConfig);
             this.Controls.Add(this.buttonDownloadDLL);
             this.Controls.Add(this.buttonOpenAppGitHubPage);
             this.Controls.Add(this.buttonOpenLogitechSDKPage);
@@ -272,6 +284,7 @@
         private System.Windows.Forms.Button buttonOpenLogitechSDKPage;
         private System.Windows.Forms.Button buttonOpenAppGitHubPage;
         private System.Windows.Forms.Button buttonDownloadDLL;
+        private System.Windows.Forms.Button buttonReloadConfig;
     }
 }
 

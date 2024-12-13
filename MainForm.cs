@@ -121,6 +121,7 @@ namespace G915X_KeyState_Indicator
         // Other Defaults
         private static bool startMinimizedToTray = false;
         private static InitStatus initStatus = InitStatus.NOT_CHECKED;
+        private static bool firstConfigLoad = true;
 
         // ---------------------------------------------------------------------------------
 
@@ -141,24 +142,7 @@ namespace G915X_KeyState_Indicator
 
             SetupUI(initStatus: initStatus);
 
-            if (initStatus == InitStatus.SUCCESS)
-            {
-                // First set default color for all devices
-                LogitechGSDK.LogiLedSetTargetDevice(LogitechGSDK.LOGI_DEVICETYPE_ALL);
-                LogitechGSDK.LogiLedSetLighting(redPercentage: default_otherDevice_color.R, greenPercentage: default_otherDevice_color.G, bluePercentage: default_otherDevice_color.B);
-
-                // Then target the keyboard and set base lighting color
-                LogitechGSDK.LogiLedSetTargetDevice(LogitechGSDK.LOGI_DEVICETYPE_PERKEY_RGB);
-                LogitechGSDK.LogiLedSetLightingForTargetZone(
-                    DeviceType.Keyboard,
-                    0, // Zone - 0 is the entire keyboard
-                    default_key_color.R,
-                    default_key_color.G,
-                    default_key_color.B
-                );
-
-                UpdateColorLabel(labelColorDefault, default_key_color, "Default");
-            }
+            LoadAndApplyConfig();
 
             // Set up keyboard hook
             _proc = HookCallback;
@@ -170,12 +154,58 @@ namespace G915X_KeyState_Indicator
                 UpdateKeyStatus(key);
             }
 
+            firstConfigLoad = false;
+
             // Apparently need to do this both here AND in the Load event handler or else it doesn't work
             if (startMinimizedToTray)
             {
                 this.WindowState = FormWindowState.Minimized;
                 this.Hide();
             }
+        }
+
+        private void LoadAndApplyConfig()
+        {
+            if (!firstConfigLoad)
+                LoadConfig();
+
+            if (initStatus == InitStatus.SUCCESS)
+            {
+                // First set default color for all devices
+                LogitechGSDK.LogiLedSetTargetDevice(LogitechGSDK.LOGI_DEVICETYPE_ALL);
+                LogitechGSDK.LogiLedSetLighting(redPercentage: ToPct(default_otherDevice_color.R), greenPercentage: ToPct(default_otherDevice_color.G), bluePercentage: ToPct(default_otherDevice_color.B));
+                // Wait a short time
+                System.Threading.Thread.Sleep(50);
+
+                // Then target the keyboard and set base lighting color
+                LogitechGSDK.LogiLedSetTargetDevice((LogitechGSDK.LOGI_DEVICETYPE_PERKEY_RGB));
+                LogitechGSDK.LogiLedSetLighting(redPercentage: ToPct(default_key_color.R), greenPercentage: ToPct(default_key_color.G), bluePercentage: ToPct(default_key_color.B));
+
+                // This tries to set it for keyboards, but doesn't seem to work for newer ones
+                //LogitechGSDK.LogiLedSetLightingForTargetZone(
+                //    DeviceType.Keyboard,
+                //    0, // Zone - 0 is the entire keyboard
+                //    ToPct(default_key_color.R),
+                //    ToPct(default_key_color.G),
+                //    ToPct(default_key_color.B)
+                //);
+            }
+
+            UpdateColorLabel(labelColorDefault, default_key_color, "Default");
+
+            // Don't apply the colors yet if this is the first time for this function because we haven't loaded the keyboard hooks yet
+            if (!firstConfigLoad)
+            {
+                foreach (int key in keysToMonitor)
+                {
+                    UpdateKeyStatus(key);
+                }
+            }
+        }
+
+        private int ToPct(int value)
+        {
+            return (int)Math.Round((double)value / 255 * 100);
         }
 
         //TESTING
@@ -709,6 +739,11 @@ namespace G915X_KeyState_Indicator
             {
                 MessageBox.Show("Download failed! Try downloading it yourself with one of the other buttons.");
             }
+        }
+
+        private void buttonReloadConfig_Click(object sender, EventArgs e)
+        {
+            LoadAndApplyConfig();
         }
 
         //private void GetFileInfo()
