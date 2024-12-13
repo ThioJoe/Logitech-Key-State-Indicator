@@ -90,7 +90,8 @@ namespace G915X_KeyState_Indicator
         private IntPtr _hookID = IntPtr.Zero;
 
         // Set up colors for each key. These will properties will be updated from the config file
-        private RGBTuple default_Color =        (R:0, G:0, B:255);
+        private RGBTuple default_key_color =         (R: 0, G: 0, B: 255);
+        private RGBTuple default_otherDevice_color = (R: 0, G: 0, B: 255);
         // On
         private RGBTuple capsLock_On_Color =    (R: 255, G: 0, B: 0);
         private RGBTuple scrollLock_On_Color =  (R: 0, G: 0, B: 255);
@@ -102,7 +103,8 @@ namespace G915X_KeyState_Indicator
 
 
         // Readonly default versions - Will be used if the config file is not found or a value is missing
-        private static readonly RGBTuple _default_Color =           (R: 0, G: 0, B: 255);
+        private static readonly RGBTuple _default_key_Color =         (R: 0, G: 0, B: 255);
+        private static readonly RGBTuple _default_otherDevice_Color = (R: 0, G: 0, B: 255);
         // On
         private static readonly RGBTuple _capsLock_On_Color =       (R: 255, G: 0, B: 0);
         private static readonly RGBTuple _scrollLock_On_Color =     (R: 255, G: 0, B: 0);
@@ -124,9 +126,9 @@ namespace G915X_KeyState_Indicator
 
         public MainForm()
         {
-#if DEBUG
+            #if DEBUG
             DEBUGMODE = true;
-#endif
+            #endif
 
             // Add exe current directory to PATH
             string path = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
@@ -141,12 +143,21 @@ namespace G915X_KeyState_Indicator
 
             if (initStatus == InitStatus.SUCCESS)
             {
-                // First set the base lighting for all keys
-                // Set target device to per-key RGB keyboards
-                LogitechGSDK.LogiLedSetTargetDevice(LogitechGSDK.LOGI_DEVICETYPE_PERKEY_RGB);
+                // First set default color for all devices
+                LogitechGSDK.LogiLedSetTargetDevice(LogitechGSDK.LOGI_DEVICETYPE_ALL);
+                LogitechGSDK.LogiLedSetLighting(redPercentage: default_otherDevice_color.R, greenPercentage: default_otherDevice_color.G, bluePercentage: default_otherDevice_color.B);
 
-                LogitechGSDK.LogiLedSetLighting(redPercentage: default_Color.R, greenPercentage: default_Color.G, bluePercentage: default_Color.B);
-                UpdateColorLabel(labelColorDefault, default_Color, "Default");
+                // Then target the keyboard and set base lighting color
+                LogitechGSDK.LogiLedSetTargetDevice(LogitechGSDK.LOGI_DEVICETYPE_PERKEY_RGB);
+                LogitechGSDK.LogiLedSetLightingForTargetZone(
+                    DeviceType.Keyboard,
+                    0, // Zone - 0 is the entire keyboard
+                    default_key_color.R,
+                    default_key_color.G,
+                    default_key_color.B
+                );
+
+                UpdateColorLabel(labelColorDefault, default_key_color, "Default");
             }
 
             // Set up keyboard hook
@@ -165,6 +176,12 @@ namespace G915X_KeyState_Indicator
                 this.WindowState = FormWindowState.Minimized;
                 this.Hide();
             }
+        }
+
+        //TESTING
+        private void ShowAndWaitForMessageBox(string message)
+        {
+            MessageBox.Show(message);
         }
 
         // ---------------------------------------------------------------------------------
@@ -257,7 +274,7 @@ namespace G915X_KeyState_Indicator
                 return InitStatus.NO_DLL;
             }
 
-            string failMessage = "Failed to load Logitech engine. General Tips:\n 1. Make sure the Logitech GHUB software is installed (it doesn't need to be running). " +
+            string failMessage = "Failed to load Logitech engine. General Tips:\n 1. Make sure the Logitech GHUB software is installed (it might need to also be running). " +
                 $"\n2. If you used the 64 bit version of {logiDllName}, use the 32 bit version. I've found the 64 bit version didn't work for me.";
 
             // Initialize the Logitech engine
@@ -293,7 +310,7 @@ namespace G915X_KeyState_Indicator
                 // First check the hard coded hash
                 if (GetSha256Hash(logiDllPath) == x86dllHash)
                 {
-                    messageToShow += "You definitely have the correct DLL, but it still failed to initialize the Logitech engine. Make sure you have the GHUB software is installed";
+                    messageToShow += "You definitely have the correct DLL, but it still failed to initialize the Logitech engine. Make sure you have the GHUB software is installed and running.";
                 }
                 else if (!isValid && signerName != null)
                 {
@@ -305,7 +322,7 @@ namespace G915X_KeyState_Indicator
                 }
                 else if (signerName.StartsWith("Logitech"))
                 {
-                    messageToShow += "The DLL appears likely valid, but it still failed to initialize Logitech engine. Make sure the GHUB software is installed.";
+                    messageToShow += "The DLL appears likely valid, but it still failed to initialize Logitech engine. Make sure the GHUB software is installed and running.";
                 }
                 
                 MessageBox.Show(messageToShow, "Failed to attach to Logitech Engine", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -616,7 +633,7 @@ namespace G915X_KeyState_Indicator
             // First show a message box asking if they want to download, if they click OK then proceed
             DialogResult result = MessageBox.Show($"This will download the required {logiDllName} file directly from this app's GitHub repository. It is signed by Logitech." +
                 $"\n\nThis is the file that allows the application to interface with Logitech keyboards." +
-                $"\nYou may also need to have Logitech's GHUB software installed, but it does NOT need to be running for this to work." +
+                $"\nYou also need to have Logitech's GHUB software installed, and it probably needs to be running." +
                 $"\n\nIf you prefer, you can also get the DLL directly from Logitech using the other button to open their SDK website." +
                 $"\n\nDownload?",
                 "Download DLL", MessageBoxButtons.OKCancel, MessageBoxIcon.Information);

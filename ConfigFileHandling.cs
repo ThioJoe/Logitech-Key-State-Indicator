@@ -123,19 +123,20 @@ namespace G915X_KeyState_Indicator
                 }
                 catch (Exception ex)
                 {
-                    errors.Add($"Failed to load {settingName}: {ex.Message}");
+                    errors.Add($"Failed to load setting: {settingName}\n    {ex.Message}\n\n");
                     return defaultValue;
                 }
             }
 
             // Load all color, specifying the default value for each to use if there's an error
-            default_Color = LoadColor("default_Color", _default_Color);
-            capsLock_On_Color = LoadColor("capsLock_On_Color", _capsLock_On_Color);
-            scrollLock_On_Color = LoadColor("scrollLock_On_Color", _scrollLock_On_Color);
-            numLock_On_Color = LoadColor("numLock_On_Color", _numLock_On_Color);
-            capsLock_Off_Color = LoadColor("capsLock_Off_Color", _capsLock_Off_Color);
-            scrollLock_Off_Color = LoadColor("scrollLock_Off_Color", _scrollLock_Off_Color);
-            numLock_Off_Color = LoadColor("numLock_Off_Color", _numLock_Off_Color);
+            default_key_color = LoadColor("default_key_color", _default_key_Color);
+            default_otherDevice_color = LoadColor("default_other_device_color", _default_otherDevice_Color);
+            capsLock_On_Color = LoadColor("capsLock_On_color", _capsLock_On_Color);
+            scrollLock_On_Color = LoadColor("scrollLock_On_color", _scrollLock_On_Color);
+            numLock_On_Color = LoadColor("numLock_On_color", _numLock_On_Color);
+            capsLock_Off_Color = LoadColor("capsLock_Off_color", _capsLock_Off_Color);
+            scrollLock_Off_Color = LoadColor("scrollLock_Off_color", _scrollLock_Off_Color);
+            numLock_Off_Color = LoadColor("numLock_Off_color", _numLock_Off_Color);
 
             // Load debug mode
             try
@@ -145,7 +146,7 @@ namespace G915X_KeyState_Indicator
             }
             catch (Exception ex)
             {
-                errors.Add($"Failed to load debugMode setting: {ex.Message}");
+                errors.Add($"Failed to load setting: debugMode:\n    {ex.Message}");
                 DEBUGMODE = false;
             }
 
@@ -157,7 +158,7 @@ namespace G915X_KeyState_Indicator
             }
             catch (Exception ex)
             {
-                errors.Add($"Failed to load minimize_to_tray setting: {ex.Message}");
+                errors.Add($"Failed to load setting: minimize_to_tray\n    {ex.Message}");
                 startMinimizedToTray = false;
             }
 
@@ -166,7 +167,8 @@ namespace G915X_KeyState_Indicator
             {
                 MessageBox.Show(
                     $"Some settings failed to load (default values will be used for these settings):\n\n{string.Join("\n", errors)}" +
-                    $"\n\nNote: If it says \"config file not found\" it probably means that individual setting wasn't found, not the entire file.\n(It's a Windows API thing)",
+                    $"\nNote: If it says \"config file not found\" it probably means that individual setting wasn't found, not the entire file.\n(It's a Windows API thing)\n" +
+                    $"You can delete or rename the config file to have it generate a new one.",
                     "Configuration Warnings",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Warning);
@@ -188,7 +190,8 @@ namespace G915X_KeyState_Indicator
 
         private void UseDefaults()
         {
-            default_Color = _default_Color;
+            default_key_color = _default_key_Color;
+            default_otherDevice_color = _default_otherDevice_Color;
             capsLock_On_Color = _capsLock_On_Color;
             scrollLock_On_Color = _scrollLock_On_Color;
             numLock_On_Color = _numLock_On_Color;
@@ -208,18 +211,20 @@ namespace G915X_KeyState_Indicator
     # For example  whateverSetting=default
 
 [Settings]
-    # The color of the rest of the key son the keyboard
-default_Color=0,0,255
+    # The color of the rest of the keys on the keyboard
+default_key_color=0,0,255
+    # The color for other logitech devices, if any. Unfortunately there doesn't seem to be a way to just keep their current color automatically. It should go back when the app closes though.
+default_other_device_color=0,0,255
 
     # The color of each key while its status is ON
-capsLock_On_Color=255,0,0
-scrollLock_On_Color=255,0,0
-numLock_On_Color=255,0,0
+capsLock_On_color=255,0,0
+scrollLock_On_color=255,0,0
+numLock_On_color=255,0,0
 
     # The color of each key while its status is OFF.
-capsLock_Off_Color=default
-scrollLock_Off_Color=default
-numLock_Off_Color=default
+capsLock_Off_color=default
+scrollLock_Off_color=default
+numLock_Off_color=default
 
 minimize_to_tray=false
 debugMode=false
