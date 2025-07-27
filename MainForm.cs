@@ -287,6 +287,10 @@ namespace G915X_KeyState_Indicator
             return CallNextHookEx(_hookID, nCode, wParam, lParam);
         }
 
+        // SECURITY WARNING - For personal use where you're building this app yourself, this function is sufficient, but it does not check the integrity of the DLL before loading, only its existence.
+        // For production use and where you'll be distributing or signing the final app, you'll need to add much more rigorous checks to avoid TOCTOU vulnerability.
+        // For more info see: https://afine.com/understanding-and-mitigating-toctou-vulnerabilities-in-c-applications/
+        //      Archive Link: https://web.archive.org/web/20250630140139/https://afine.com/understanding-and-mitigating-toctou-vulnerabilities-in-c-applications/
         private InitStatus CheckLogitechDLL()
         {
             // Get full path to the DLL
